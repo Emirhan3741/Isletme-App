@@ -25,7 +25,7 @@ class UserService {
   // Tüm kullanıcıları getir
   Future<List<UserModel>> getUsers() async {
     final querySnapshot = await _usersCollection.orderBy('createdAt', descending: true).get();
-    return querySnapshot.docs.map((doc) => UserModel.fromMap(doc.data() as Map<String, dynamic>)).toList();
+    return querySnapshot.docs.map((doc) => UserModel.fromMap(doc.data() as Map<String, dynamic>, doc.id)).toList();
   }
 }
 // Cleaned for Web Build by Cursor 
