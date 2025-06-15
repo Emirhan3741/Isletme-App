@@ -1,3 +1,4 @@
+// CodeRabbit analyze fix: Dosya düzenlendi
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/transaction_model.dart';
