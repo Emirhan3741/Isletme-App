@@ -1,3 +1,4 @@
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/Emirhan3741/Isletme-App?utm_source=oss&utm_medium=github&utm_campaign=Emirhan3741%2FIsletme-App&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 // Bu satır flutter-fix branch'i için test amaçlı eklendi
 # randevu_erp
 
