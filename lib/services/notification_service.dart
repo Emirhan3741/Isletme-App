@@ -65,13 +65,11 @@ class NotificationService {
   // Gider hatırlatıcısı zamanla
   Future<void> scheduleExpenseReminder(ExpenseModel expense) async {
     // Gider tarihinden 1 gün önce hatırlatıcı ayarla
-    final reminderDate = expense.date.subtract(const Duration(days: 1));
-    
+    final reminderDate = expense.createdAt.subtract(const Duration(days: 1));
     // Eğer hatırlatıcı tarihi geçmişte ise, hatırlatıcı ayarlama
     if (reminderDate.isBefore(DateTime.now())) {
       return;
     }
-
     // Hatırlatıcı zamanı: Sabah 9:00
     final scheduledDate = DateTime(
       reminderDate.year,
@@ -80,9 +78,7 @@ class NotificationService {
       9, // Saat 9
       0,  // Dakika 0
     );
-
     final categoryIcon = getExpenseCategoryIcon(expense.category);
-    
     await _notifications.zonedSchedule(
       expense.id.hashCode, // Unique ID
       'Gider Hatırlatıcısı',
@@ -107,7 +103,6 @@ class NotificationService {
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       payload: 'expense_${expense.id}',
     );
-
     print('Gider hatırlatıcısı ayarlandı: ${expense.category} - $scheduledDate');
   }
 

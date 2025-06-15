@@ -55,7 +55,7 @@ class _RegisterPageState extends State<RegisterPage> {
           };
           await FirebaseFirestore.instance
               .collection('users')
-              .doc(user.uid)
+              .doc(user.id)
               .collection('business')
               .add(businessData);
         }

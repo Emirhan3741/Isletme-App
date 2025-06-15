@@ -43,6 +43,7 @@ class _AddEditEmployeePageState extends State<AddEditEmployeePage> {
           name: _nameController.text.trim(),
           email: _emailController.text.trim(),
           updatedAt: DateTime.now(),
+          id: widget.employee!.id,
         );
         await _userService.updateUser(updatedEmployee, '');
         if (mounted) {

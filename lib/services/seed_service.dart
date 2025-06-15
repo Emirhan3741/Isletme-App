@@ -1,10 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/user_model.dart';
-import '../models/customer_model.dart';
-import '../models/appointment_model.dart';
-import '../models/transaction_model.dart';
-import '../models/expense_model.dart';
-import '../models/note_model.dart';
 
 Future<void> seedInitialData() async {
   final firestore = FirebaseFirestore.instance;
