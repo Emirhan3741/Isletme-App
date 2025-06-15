@@ -5,17 +5,17 @@ import '../../services/customer_service.dart';
 import '../customers/customer_list_page.dart';
 import '../customers/add_edit_customer_page.dart';
 import '../appointments/calendar_page.dart';
-import '../transactions/transaction_list_page.dart';
+import '../../lib/screens/transactions/transaction_list_page.dart';
 import '../transactions/add_edit_transaction_page.dart';
-import '../expenses/expense_list_page.dart';
-import '../expenses/add_edit_expense_page.dart';
-import '../notes/notes_list_page.dart';
-import '../notes/add_edit_note_page.dart';
-import '../reports/report_dashboard_page.dart';
-import '../admin/employee_list_page.dart';
+import '../../lib/screens/expenses/expense_list_page.dart';
+import '../../lib/screens/expenses/add_edit_expense_page.dart';
+import '../../lib/screens/notes/notes_list_page.dart';
+import '../../lib/screens/notes/add_edit_note_page.dart';
+import '../../lib/screens/reports/report_dashboard_page.dart';
+import '../../lib/screens/admin/employee_list_page.dart';
 import '../../services/appointment_service.dart';
-import '../../services/note_service.dart';
-import '../../services/user_service.dart';
+import '../../lib/services/note_service.dart';
+import '../../lib/services/user_service.dart';
 import '../../models/user_model.dart';
 
 class DashboardPage extends StatefulWidget {
