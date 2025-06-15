@@ -1,4 +1,31 @@
 // CodeRabbit analyze fix: Dosya düzenlendi
+
+enum UserRole { owner, worker, unknown }
+
+extension UserRoleExtension on UserRole {
+  String get displayName {
+    switch (this) {
+      case UserRole.owner:
+        return 'Yönetici';
+      case UserRole.worker:
+        return 'Çalışan';
+      default:
+        return 'Bilinmiyor';
+    }
+  }
+
+  static UserRole fromString(String? value) {
+    switch (value) {
+      case 'owner':
+        return UserRole.owner;
+      case 'worker':
+        return UserRole.worker;
+      default:
+        return UserRole.unknown;
+    }
+  }
+}
+
 class UserModel {
   final String id;
   final String email;
@@ -6,7 +33,7 @@ class UserModel {
   final String? photoURL;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final String? rol;
+  final UserRole role;
   final DateTime? lastSignIn;
 
   UserModel({
@@ -16,7 +43,7 @@ class UserModel {
     this.photoURL,
     required this.createdAt,
     required this.updatedAt,
-    this.rol,
+    this.role = UserRole.unknown,
     this.lastSignIn,
   });
 
@@ -28,7 +55,7 @@ class UserModel {
       photoURL: map['photoURL'],
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? 0),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] ?? 0),
-      rol: map['rol'],
+      role: UserRoleExtension.fromString(map['rol']),
       lastSignIn: map['lastSignIn'] != null ? DateTime.fromMillisecondsSinceEpoch(map['lastSignIn']) : null,
     );
   }
@@ -41,7 +68,7 @@ class UserModel {
       'photoURL': photoURL,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'updatedAt': updatedAt.millisecondsSinceEpoch,
-      'rol': rol,
+      'rol': role.name,
       'lastSignIn': lastSignIn?.millisecondsSinceEpoch,
     };
   }
@@ -53,7 +80,7 @@ class UserModel {
     String? photoURL,
     DateTime? createdAt,
     DateTime? updatedAt,
-    String? rol,
+    UserRole? role,
     DateTime? lastSignIn,
   }) {
     return UserModel(
@@ -63,22 +90,21 @@ class UserModel {
       photoURL: photoURL ?? this.photoURL,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      rol: rol ?? this.rol,
+      role: role ?? this.role,
       lastSignIn: lastSignIn ?? this.lastSignIn,
     );
   }
 
   @override
   String toString() {
-    return 'UserModel(id: $id, email: $email, displayName: $displayName, photoURL: $photoURL, createdAt: $createdAt, updatedAt: $updatedAt, rol: $rol, lastSignIn: $lastSignIn)';
+    return 'UserModel(id: $id, email: $email, displayName: $displayName, photoURL: $photoURL, createdAt: $createdAt, updatedAt: $updatedAt, role: $role, lastSignIn: $lastSignIn)';
   }
 
   String get adSoyad => displayName;
   String get eposta => email;
   String get uid => id;
   DateTime get oluşturulmaTarihi => createdAt;
-  bool get isOwner => rol == 'owner';
-  bool get isWorker => rol == 'worker';
-  // rol için ileride enum tanımı yapılması önerildi.
-  // Refactored by CodeRabbit suggestion
+  bool get isOwner => role == UserRole.owner;
+  bool get isWorker => role == UserRole.worker;
+  // Refactored by Cursor
 } 

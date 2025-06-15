@@ -114,7 +114,5 @@ class CustomerModel {
   }
 
   @override
-  int get hashCode {
-    return id.hashCode;
-  }
+  int get hashCode => id.hashCode;
 } 
