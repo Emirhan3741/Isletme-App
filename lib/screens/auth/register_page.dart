@@ -40,7 +40,7 @@ class _RegisterPageState extends State<RegisterPage> {
       final success = await authProvider.createUserWithEmailAndPassword(
         _emailController.text.trim(),
         _passwordController.text,
-        _displayNameController.text.trim(),
+        _businessNameController.text.trim(),
       );
 
       if (success && mounted) {

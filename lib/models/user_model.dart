@@ -77,6 +77,15 @@ class UserModel {
   String toString() {
     return 'UserModel(id: $id, name: $name, email: $email)';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is UserModel && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 // Auto-cleaned and rebuilt by Cursor 
