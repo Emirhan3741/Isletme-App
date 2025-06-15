@@ -43,6 +43,7 @@ class _AddEditCustomerPageState extends State<AddEditCustomerPage> {
           name: _nameController.text.trim(),
           email: _emailController.text.trim(),
           updatedAt: DateTime.now(),
+          id: widget.customer!.id,
         );
         await _customerService.updateCustomer(updatedCustomer);
         if (mounted) {
@@ -52,6 +53,7 @@ class _AddEditCustomerPageState extends State<AddEditCustomerPage> {
         }
       } else {
         final newCustomer = CustomerModel(
+          id: UniqueKey().toString(),
           name: _nameController.text.trim(),
           email: _emailController.text.trim(),
           createdAt: DateTime.now(),

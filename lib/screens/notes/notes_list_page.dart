@@ -26,7 +26,7 @@ class _NotesListPageState extends State<NotesListPage> {
     if (_searchQuery.isEmpty) return notes;
     return notes.where((note) {
       return note.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-             (note.content?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+             note.content.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
   }
 
@@ -103,7 +103,7 @@ class _NotesListPageState extends State<NotesListPage> {
                       ),
                       title: Text(note.title),
                       subtitle: Text(
-                        note.content ?? '',
+                        note.content,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),

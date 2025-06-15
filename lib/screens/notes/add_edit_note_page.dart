@@ -46,6 +46,7 @@ class _AddEditNotePageState extends State<AddEditNotePage> {
           content: _contentController.text.trim(),
           color: _selectedColor,
           updatedAt: DateTime.now(),
+          id: widget.note!.id,
         );
         await _noteService.updateNote(updatedNote);
         if (mounted) {
@@ -55,7 +56,7 @@ class _AddEditNotePageState extends State<AddEditNotePage> {
         }
       } else {
         final newNote = NoteModel(
-          id: null,
+          id: UniqueKey().toString(),
           title: _titleController.text.trim(),
           content: _contentController.text.trim(),
           color: _selectedColor,

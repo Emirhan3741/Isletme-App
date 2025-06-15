@@ -57,26 +57,11 @@ class _TransactionListPageState extends State<TransactionListPage> {
   // İşlemleri filtrele
   List<TransactionModel> _filterTransactions(List<TransactionModel> transactions) {
     List<TransactionModel> filtered = transactions;
-
-    // Ödeme durumu filtresi
-    if (_selectedFilter != null) {
-      filtered = filtered.where((transaction) => 
-        transaction.paymentStatus == _selectedFilter).toList();
-    }
-
-    // Arama filtresi
     if (_searchQuery.isNotEmpty) {
       filtered = filtered.where((transaction) {
-        final customer = _customers[transaction.customerId];
-        final customerName = customer != null 
-          ? '${customer.name} ${customer.email}'.toLowerCase()
-          : '';
-        return transaction.operationName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-               customerName.contains(_searchQuery.toLowerCase()) ||
-               transaction.amount.toString().contains(_searchQuery);
+        return transaction.amount.toString().contains(_searchQuery);
       }).toList();
     }
-
     return filtered;
   }
 

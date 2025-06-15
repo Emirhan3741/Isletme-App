@@ -55,12 +55,10 @@ class AuthProvider extends ChangeNotifier {
     if (firebaseUser != null) {
       _user = UserModel(
         id: firebaseUser.uid,
+        name: firebaseUser.displayName ?? '',
         email: firebaseUser.email ?? '',
-        displayName: firebaseUser.displayName ?? '',
-        photoUrl: firebaseUser.photoURL,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-        role: UserRole.worker,
       );
     } else {
       _user = null;
@@ -81,7 +79,7 @@ class AuthProvider extends ChangeNotifier {
         );
         
         if (userMaps.isNotEmpty) {
-          _user = UserModel.fromMap(userMaps.first);
+          _user = UserModel.fromMap(userMaps.first, userMaps.first['id'] ?? '');
         }
       }
     } catch (e) {
@@ -183,7 +181,7 @@ class AuthProvider extends ChangeNotifier {
       // Note: In a real app, you should hash and verify passwords
       // For demo purposes, we're skipping password verification
       
-      final user = UserModel.fromMap(userMaps.first);
+      final user = UserModel.fromMap(userMaps.first, userMaps.first['id'] ?? '');
       _user = user;
       
       final prefs = await SharedPreferences.getInstance();
@@ -212,14 +210,7 @@ class AuthProvider extends ChangeNotifier {
       }
       
       // Create new user
-      final user = UserModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        email: email,
-        displayName: displayName,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        role: UserRole.worker,
-      );
+      final user = UserModel.fromMap(userMaps.first, userMaps.first['id'] ?? '');
       
       await DatabaseService.instance.insert('users', user.toMap());
       
