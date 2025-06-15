@@ -13,26 +13,20 @@ Future<void> seedInitialData() async {
   final userRef = firestore.collection('users').doc('demoUser');
   await userRef.set({
     'id': 'demoUser',
+    'name': 'Demo User',
     'email': 'demo@demo.com',
-    'displayName': 'Demo User',
-    'photoURL': null,
     'createdAt': DateTime.now(),
     'updatedAt': DateTime.now(),
-    'role': 'owner',
-    'lastSignIn': DateTime.now().toIso8601String(),
   });
 
   // 2. Customer
   final customerRef = firestore.collection('customers').doc('demoCustomer');
   await customerRef.set({
     'id': 'demoCustomer',
-    'firstName': 'John',
-    'lastName': 'Doe',
-    'phone': '5551234567',
+    'name': 'John Doe',
     'email': 'john@example.com',
-    'note': 'VIP müşteri',
     'createdAt': DateTime.now(),
-    'createdByUserId': 'demoUser',
+    'updatedAt': DateTime.now(),
   });
 
   // 3. Appointment
@@ -44,7 +38,6 @@ Future<void> seedInitialData() async {
     'date': DateTime.now(),
     'time': '10:00',
     'operationName': 'Consultation',
-    'note': 'İlk randevu',
     'createdAt': DateTime.now(),
   });
 
@@ -52,16 +45,9 @@ Future<void> seedInitialData() async {
   final transactionRef = firestore.collection('transactions').doc('demoTransaction');
   await transactionRef.set({
     'id': 'demoTransaction',
-    'customerId': 'demoCustomer',
-    'appointmentId': 'demoAppointment',
-    'operationName': 'Consultation',
     'amount': 100.0,
-    'paymentStatus': 'paid',
-    'paymentType': 'cash',
-    'note': 'Nakit ödeme',
-    'date': DateTime.now(),
     'createdAt': DateTime.now(),
-    'createdByUserId': 'demoUser',
+    'updatedAt': DateTime.now(),
   });
 
   // 5. Expense
@@ -69,13 +55,7 @@ Future<void> seedInitialData() async {
   await expenseRef.set({
     'id': 'demoExpense',
     'amount': 50.0,
-    'category': 'Office',
-    'description': 'Kırtasiye',
-    'date': DateTime.now(),
-    'invoiceNo': 'INV-001',
-    'supplier': 'Ofis Market',
-    'paymentMethod': 'cash',
-    'userId': 'demoUser',
+    'category': 'other',
     'createdAt': DateTime.now(),
   });
 
@@ -83,13 +63,10 @@ Future<void> seedInitialData() async {
   final noteRef = firestore.collection('notes').doc('demoNote');
   await noteRef.set({
     'id': 'demoNote',
-    'title': 'Hoş geldiniz',
-    'content': 'Sisteme hoş geldiniz!',
-    'category': 'Genel',
-    'completed': false,
-    'priority': 1,
-    'color': '#2196F3',
+    'title': 'Welcome',
+    'content': 'Welcome to the system!',
+    'color': 0,
     'createdAt': DateTime.now(),
-    'userId': 'demoUser',
+    'updatedAt': DateTime.now(),
   });
 } 

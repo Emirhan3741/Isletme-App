@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import '../../models/customer_model.dart';
-import '../../services/customer_service.dart';
+import 'package:randevu_erp/models/customer_model.dart';
+import 'package:randevu_erp/services/customer_service.dart';
 import 'add_edit_customer_page.dart';
 
 class CustomerListPage extends StatefulWidget {
@@ -26,55 +25,29 @@ class _CustomerListPageState extends State<CustomerListPage> {
     if (_searchQuery.isEmpty) return customers;
     return customers.where((customer) {
       return customer.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-             (customer.email?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+             customer.email.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
-  }
-
-  Future<void> _refreshCustomers() async {
-    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Müşteriler'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AddEditCustomerPage()),
-              );
-              if (result == true) _refreshCustomers();
-            },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Customers')),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(8.0),
             child: TextField(
               controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Ad veya e-posta ara...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+              decoration: const InputDecoration(
+                labelText: 'Search customers',
+                prefixIcon: Icon(Icons.search),
               ),
-              onChanged: (value) => setState(() => _searchQuery = value),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
             ),
           ),
           Expanded(
@@ -85,11 +58,11 @@ class _CustomerListPageState extends State<CustomerListPage> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('Kayıtlı müşteri yok.'));
+                  return const Center(child: Text('No customers found.'));
                 }
                 final customers = _filterCustomers(snapshot.data!);
                 if (customers.isEmpty) {
-                  return const Center(child: Text('Aramanıza uygun müşteri bulunamadı.'));
+                  return const Center(child: Text('No customers match your search.'));
                 }
                 return ListView.separated(
                   itemCount: customers.length,
@@ -97,10 +70,8 @@ class _CustomerListPageState extends State<CustomerListPage> {
                   itemBuilder: (context, i) {
                     final customer = customers[i];
                     return ListTile(
-                      leading: const CircleAvatar(child: Icon(Icons.person)),
                       title: Text(customer.name),
-                      subtitle: Text(customer.email ?? ''),
-                      trailing: Text(DateFormat('dd.MM.yyyy').format(customer.createdAt)),
+                      subtitle: Text(customer.email),
                       onTap: () async {
                         final result = await Navigator.push(
                           context,
@@ -108,7 +79,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                             builder: (_) => AddEditCustomerPage(customer: customer),
                           ),
                         );
-                        if (result == true) _refreshCustomers();
+                        if (result == true) setState(() {});
                       },
                     );
                   },

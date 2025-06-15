@@ -21,14 +21,9 @@ class AppointmentModel {
     required this.createdAt,
   });
 
-  factory AppointmentModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return AppointmentModel.fromMap(data, doc.id);
-  }
-
-  factory AppointmentModel.fromMap(Map<String, dynamic> map, [String? documentId]) {
+  factory AppointmentModel.fromMap(Map<String, dynamic> map, String id) {
     return AppointmentModel(
-      id: documentId ?? map['id'] ?? '',
+      id: id,
       customerId: map['customerId'] ?? '',
       employeeId: map['employeeId'] ?? '',
       date: (map['date'] is Timestamp)
@@ -45,7 +40,6 @@ class AppointmentModel {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'customerId': customerId,
       'employeeId': employeeId,
       'date': date,
