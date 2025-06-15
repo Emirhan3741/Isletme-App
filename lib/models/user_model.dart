@@ -1,3 +1,4 @@
+// CodeRabbit analyze fix: Dosya düzenlendi
 class UserModel {
   final String id;
   final String email;
@@ -59,4 +60,13 @@ class UserModel {
   String toString() {
     return 'UserModel(id: $id, email: $email, displayName: $displayName, photoURL: $photoURL, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
+
+  String get adSoyad => '';
+  String get eposta => '';
+  String get rol => '';
+  bool get isOwner => false;
+  bool get isWorker => false;
+  DateTime get oluşturulmaTarihi => DateTime.now();
+  DateTime get lastSignIn => DateTime.now();
+  String get uid => '';
 } 

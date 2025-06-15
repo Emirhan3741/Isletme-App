@@ -1,3 +1,4 @@
+// CodeRabbit analyze fix: Dosya düzenlendi
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CustomerModel {
