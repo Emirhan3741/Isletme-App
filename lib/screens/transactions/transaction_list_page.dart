@@ -1,10 +1,8 @@
 // CodeRabbit analyze fix: Dosya düzenlendi
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../models/transaction_model.dart';
-import '../../services/transaction_service.dart';
-import '../../services/customer_service.dart';
-import '../../models/customer_model.dart';
+import 'package:randevu_erp/models/transaction_model.dart';
+import 'package:randevu_erp/services/transaction_service.dart';
 import 'add_edit_transaction_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
@@ -19,50 +17,27 @@ class TransactionListPage extends StatefulWidget {
 
 class _TransactionListPageState extends State<TransactionListPage> {
   final TransactionService _transactionService = TransactionService();
-  final CustomerService _customerService = CustomerService();
-  final TextEditingController _searchController = TextEditingController();
-
+  List<TransactionModel> _transactions = [];
   String _searchQuery = '';
-  PaymentStatus? _selectedFilter;
-  Map<String, CustomerModel> _customers = {};
-  CustomerModel? customer;
 
   @override
   void initState() {
     super.initState();
-    _loadCustomers();
+    _fetchTransactions();
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  // Müşteri bilgilerini yükle (cache için)
-  void _loadCustomers() {
-    _customerService.getCustomers().then((customers) {
-      final customerMap = <String, CustomerModel>{};
-      for (var customer in customers) {
-        customerMap[customer.id] = customer;
-      }
-      if (mounted) {
-        setState(() {
-          _customers = customerMap;
-        });
-      }
+  Future<void> _fetchTransactions() async {
+    final transactions = await _transactionService.getTransactions();
+    setState(() {
+      _transactions = transactions;
     });
   }
 
-  // İşlemleri filtrele
   List<TransactionModel> _filterTransactions(List<TransactionModel> transactions) {
-    List<TransactionModel> filtered = transactions;
-    if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((transaction) {
-        return transaction.amount.toString().contains(_searchQuery);
-      }).toList();
-    }
-    return filtered;
+    if (_searchQuery.isEmpty) return transactions;
+    return transactions.where((transaction) {
+      return transaction.amount.toString().contains(_searchQuery);
+    }).toList();
   }
 
   // Finansal özet widget'i
@@ -135,62 +110,15 @@ class _TransactionListPageState extends State<TransactionListPage> {
         children: [
           // Arama çubuğu
           TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'İşlem, müşteri adı veya tutar ara...',
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() {
-                          _searchQuery = '';
-                        });
-                      },
-                    )
-                  : null,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+            decoration: const InputDecoration(
+              labelText: 'Search by amount',
+              prefixIcon: Icon(Icons.search),
             ),
             onChanged: (value) {
               setState(() {
                 _searchQuery = value;
               });
             },
-          ),
-          const SizedBox(height: 12),
-          // Filtre butonları
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                FilterChip(
-                  label: const Text('All'),
-                  selected: _selectedFilter == null,
-                  onSelected: (selected) {
-                    setState(() {
-                      _selectedFilter = null;
-                    });
-                  },
-                ),
-                ...PaymentStatus.values.map((status) {
-                  return Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: FilterChip(
-                      label: Text(status.name),
-                      selected: _selectedFilter == status,
-                      onSelected: (selected) {
-                        setState(() {
-                          _selectedFilter = selected ? status : null;
-                        });
-                      },
-                    ),
-                  );
-                }).toList(),
-              ],
-            ),
           ),
         ],
       ),
@@ -199,8 +127,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
 
   // İşlem kartı
   Widget _buildTransactionCard(TransactionModel transaction) {
-    final customer = _customers[transaction.customerId];
-    final customerName = customer != null ? '${customer.name} ${customer.email}' : 'Unknown';
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: InkWell(
@@ -214,22 +140,10 @@ class _TransactionListPageState extends State<TransactionListPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(transaction.operationName, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                  Text('${NumberFormat('#,##0.00', 'tr_TR').format(transaction.amount)} ₺', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.green[700])),
+                  Text(DateFormat('dd.MM.yyyy').format(transaction.createdAt), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  Text('${transaction.amount.toStringAsFixed(2)} ₺', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.green[700])),
                 ],
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Text('Customer: $customerName'),
-                  const SizedBox(width: 16),
-                  Text('Status: ${transaction.paymentStatus.name}'),
-                  const SizedBox(width: 16),
-                  Text('Type: ${transaction.paymentType.name}'),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text('Date: ${DateFormat('dd.MM.yyyy').format(transaction.date)}'),
             ],
           ),
         ),
@@ -311,15 +225,8 @@ class _TransactionListPageState extends State<TransactionListPage> {
                         const SizedBox(height: 16),
                         
                         // Detay bilgileri
-                        _DetailRow('İşlem Adı', transaction.operationName),
-                        _DetailRow('Tutar', '${NumberFormat('#,##0.00', 'tr_TR').format(transaction.amount)} ₺'),
-                        _DetailRow('Müşteri', customer != null ? '${customer?.name} ${customer?.email}' : 'Bilinmiyor'),
-                        _DetailRow('Ödeme Durumu', transaction.paymentStatus.name),
-                        _DetailRow('Ödeme Tipi', transaction.paymentType.name),
-                        _DetailRow('Tarih', DateFormat('dd.MM.yyyy').format(transaction.date)),
-                        if (transaction.note.isNotEmpty) 
-                          _DetailRow('Not', transaction.note),
-                        _DetailRow('Oluşturulma', DateFormat('dd.MM.yyyy HH:mm').format(transaction.createdAt ?? DateTime.now())),
+                        _DetailRow('Tarih', DateFormat('dd.MM.yyyy').format(transaction.createdAt)),
+                        _DetailRow('Tutar', '${transaction.amount.toStringAsFixed(2)} ₺'),
                       ],
                     ),
                   ),
@@ -338,7 +245,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('İşlemi Sil'),
-        content: Text('${transaction.operationName} işlemini silmek istediğinize emin misiniz?'),
+        content: Text('${DateFormat('dd.MM.yyyy').format(transaction.createdAt)} tarihli işlemini silmek istediğinize emin misiniz?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -373,6 +280,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<AuthProvider>(context, listen: false).user;
+    final filteredTransactions = _filterTransactions(_transactions);
     return Scaffold(
       appBar: AppBar(
         title: const Text('İşlemler'),
@@ -384,7 +292,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
                 context,
                 MaterialPageRoute(builder: (_) => const AddEditTransactionPage()),
               );
-              if (result == true) _refreshTransactions();
+              if (result == true) _fetchTransactions();
             },
           ),
         ],
@@ -394,26 +302,17 @@ class _TransactionListPageState extends State<TransactionListPage> {
           : Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(8.0),
             child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Tutar ara...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+              decoration: const InputDecoration(
+                labelText: 'Search by amount',
+                prefixIcon: Icon(Icons.search),
               ),
-              onChanged: (value) => setState(() => _searchQuery = value),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
             ),
           ),
           Expanded(
@@ -447,7 +346,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
                             builder: (_) => AddEditTransactionPage(transaction: transaction),
                           ),
                         );
-                        if (result == true) _refreshTransactions();
+                        if (result == true) _fetchTransactions();
                       },
                     );
                   },
@@ -458,10 +357,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
         ],
       ),
     );
-  }
-
-  Future<void> _refreshTransactions() async {
-    setState(() {});
   }
 }
 

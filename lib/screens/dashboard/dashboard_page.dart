@@ -1,46 +1,9 @@
 // CodeRabbit analyze fix: Dosya düzenlendi
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import 'package:randevu_erp/screens/transactions/add_edit_transaction_page.dart';
-import 'package:randevu_erp/screens/admin/employee_list_page.dart';
-import 'package:randevu_erp/screens/transactions/transaction_list_page.dart';
-import 'package:randevu_erp/screens/expenses/expense_list_page.dart';
-import 'package:randevu_erp/screens/expenses/add_edit_expense_page.dart';
-import 'package:randevu_erp/screens/notes/notes_list_page.dart';
-import 'package:randevu_erp/screens/notes/add_edit_note_page.dart';
-import 'package:randevu_erp/screens/reports/report_dashboard_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-// Dummy pages for navigation (gerçek sayfalarınız varsa import edin)
-class CustomerListPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: Text('Customers')));
-}
-class TransactionListPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: Text('Transactions')));
-}
-class ExpenseListPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: Text('Expenses')));
-}
-class NotesListPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: Text('Notes')));
-}
-class ReportDashboardPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: Text('Reports')));
-}
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({Key? key}) : super(key: key);
-
-  Future<int> _getCount(String collection) async {
-    final snapshot = await FirebaseFirestore.instance.collection(collection).get();
-    return snapshot.size;
-  }
 
   @override
   Widget build(BuildContext context) {
