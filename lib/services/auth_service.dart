@@ -33,11 +33,10 @@ class AuthService {
       if (user == null) {
         return 'Registration failed. Please try again.';
       }
-      final userModel = UserModel(
+      UserModel userModel = UserModel(
         id: user.uid,
+        name: displayName ?? '',
         email: email,
-        displayName: displayName,
-        role: role,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
