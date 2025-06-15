@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../../services/report_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 class ReportDashboardPage extends StatefulWidget {
   const ReportDashboardPage({super.key});
@@ -86,6 +89,7 @@ class _ReportDashboardPageState extends State<ReportDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Raporlar'),
@@ -97,40 +101,49 @@ class _ReportDashboardPageState extends State<ReportDashboardPage> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadData,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Özet kartları
-                    _buildSummarySection(),
-                    const SizedBox(height: 24),
-
-                    // Gelir/Gider karşılaştırması
-                    _buildIncomeExpenseChart(),
-                    const SizedBox(height: 24),
-
-                    // İşlem türü dağılımı
-                    _buildTransactionDistributionChart(),
-                    const SizedBox(height: 24),
-
-                    // Günlük randevular
-                    _buildDailyAppointmentsChart(),
-                    const SizedBox(height: 24),
-
-                    // Not kategorileri
-                    _buildNotesCategoryChart(),
-                    const SizedBox(height: 24),
-
-                    // En değerli müşteriler
-                    _buildTopCustomersSection(),
-                  ],
-                ),
-              ),
+      body: user == null
+          ? const Center(child: Text('Kullanıcı bulunamadı'))
+          : StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(user.uid)
+                  .collection('reports')
+                  .orderBy('createdAt', descending: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(child: Text('Henüz kayıt yok'));
+                }
+                final docs = snapshot.data!.docs;
+                return ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: docs.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final data = docs[index].data() as Map<String, dynamic>;
+                    return Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.purple.shade50,
+                          child: const Icon(Icons.analytics, color: Colors.purple),
+                        ),
+                        title: Text(data['title'] ?? 'Rapor'),
+                        subtitle: Text(data['type'] ?? ''),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.chevron_right),
+                          onPressed: () {}, // Detay veya düzenleme için
+                        ),
+                        onTap: () {},
+                      ),
+                    );
+                  },
+                );
+              },
             ),
     );
   }

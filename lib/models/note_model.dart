@@ -1,205 +1,180 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+enum NoteCategory {
+  general,
+  marketing,
+  personnel,
+  production,
+  finance,
+  customer,
+  supply,
+  quality,
+  technology,
+  law,
+  sales,
+  project,
+}
+
+extension NoteCategoryExtension on NoteCategory {
+  String get displayName {
+    switch (this) {
+      case NoteCategory.general:
+        return 'General';
+      case NoteCategory.marketing:
+        return 'Marketing';
+      case NoteCategory.personnel:
+        return 'Personnel';
+      case NoteCategory.production:
+        return 'Production';
+      case NoteCategory.finance:
+        return 'Finance';
+      case NoteCategory.customer:
+        return 'Customer';
+      case NoteCategory.supply:
+        return 'Supply';
+      case NoteCategory.quality:
+        return 'Quality';
+      case NoteCategory.technology:
+        return 'Technology';
+      case NoteCategory.law:
+        return 'Law';
+      case NoteCategory.sales:
+        return 'Sales';
+      case NoteCategory.project:
+        return 'Project';
+    }
+  }
+}
+
+enum NotePriority {
+  veryLow,
+  low,
+  medium,
+  high,
+  veryHigh,
+}
+
+extension NotePriorityExtension on NotePriority {
+  String get displayName {
+    switch (this) {
+      case NotePriority.veryLow:
+        return 'Very Low';
+      case NotePriority.low:
+        return 'Low';
+      case NotePriority.medium:
+        return 'Medium';
+      case NotePriority.high:
+        return 'High';
+      case NotePriority.veryHigh:
+        return 'Very High';
+    }
+  }
+}
+
+enum NoteColor {
+  blue,
+  green,
+  red,
+  orange,
+  purple,
+  pink,
+  yellow,
+  gray,
+  turquoise,
+  lime,
+}
+
+extension NoteColorExtension on NoteColor {
+  String get displayName {
+    switch (this) {
+      case NoteColor.blue:
+        return 'Blue';
+      case NoteColor.green:
+        return 'Green';
+      case NoteColor.red:
+        return 'Red';
+      case NoteColor.orange:
+        return 'Orange';
+      case NoteColor.purple:
+        return 'Purple';
+      case NoteColor.pink:
+        return 'Pink';
+      case NoteColor.yellow:
+        return 'Yellow';
+      case NoteColor.gray:
+        return 'Gray';
+      case NoteColor.turquoise:
+        return 'Turquoise';
+      case NoteColor.lime:
+        return 'Lime';
+    }
+  }
+}
+
 class NoteModel {
   final String id;
-  final String baslik;
-  final String icerik;
-  final String kategori;
-  final bool tamamlandi;
-  final int onem; // 1-5 arası öncelik seviyesi
-  final String renk; // Hex color code
-  final Timestamp olusturulmaTarihi;
-  final String kullaniciId;
+  final String title;
+  final String content;
+  final int color;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   NoteModel({
     required this.id,
-    required this.baslik,
-    required this.icerik,
-    required this.kategori,
-    required this.tamamlandi,
-    required this.onem,
-    required this.renk,
-    required this.olusturulmaTarihi,
-    required this.kullaniciId,
+    required this.title,
+    required this.content,
+    required this.color,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
-  // Firestore'dan gelen verileri modele dönüştürme
-  factory NoteModel.fromMap(Map<String, dynamic> map, String documentId) {
+  factory NoteModel.fromMap(Map<String, dynamic> map, String id) {
     return NoteModel(
-      id: documentId,
-      baslik: map['baslik'] ?? '',
-      icerik: map['icerik'] ?? '',
-      kategori: map['kategori'] ?? NoteCategory.genel,
-      tamamlandi: map['tamamlandi'] ?? false,
-      onem: map['onem'] ?? 1,
-      renk: map['renk'] ?? NoteColors.mavi,
-      olusturulmaTarihi: map['olusturulmaTarihi'] ?? Timestamp.now(),
-      kullaniciId: map['kullaniciId'] ?? '',
+      id: id,
+      title: map['title'] ?? '',
+      content: map['content'] ?? '',
+      color: map['color'] ?? 0,
+      createdAt: (map['createdAt'] is Timestamp)
+          ? (map['createdAt'] as Timestamp).toDate()
+          : DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
+      updatedAt: (map['updatedAt'] is Timestamp)
+          ? (map['updatedAt'] as Timestamp).toDate()
+          : DateTime.tryParse(map['updatedAt']?.toString() ?? '') ?? DateTime.now(),
     );
   }
 
-  // Model verisini Firestore formatına dönüştürme
   Map<String, dynamic> toMap() {
     return {
-      'baslik': baslik,
-      'icerik': icerik,
-      'kategori': kategori,
-      'tamamlandi': tamamlandi,
-      'onem': onem,
-      'renk': renk,
-      'olusturulmaTarihi': olusturulmaTarihi,
-      'kullaniciId': kullaniciId,
+      'title': title,
+      'content': content,
+      'color': color,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
     };
   }
 
-  // Model kopyalama fonksiyonu
   NoteModel copyWith({
     String? id,
-    String? baslik,
-    String? icerik,
-    String? kategori,
-    bool? tamamlandi,
-    int? onem,
-    String? renk,
-    Timestamp? olusturulmaTarihi,
-    String? kullaniciId,
+    String? title,
+    String? content,
+    int? color,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return NoteModel(
       id: id ?? this.id,
-      baslik: baslik ?? this.baslik,
-      icerik: icerik ?? this.icerik,
-      kategori: kategori ?? this.kategori,
-      tamamlandi: tamamlandi ?? this.tamamlandi,
-      onem: onem ?? this.onem,
-      renk: renk ?? this.renk,
-      olusturulmaTarihi: olusturulmaTarihi ?? this.olusturulmaTarihi,
-      kullaniciId: kullaniciId ?? this.kullaniciId,
+      title: title ?? this.title,
+      content: content ?? this.content,
+      color: color ?? this.color,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
   @override
   String toString() {
-    return 'NoteModel{id: $id, baslik: $baslik, kategori: $kategori, tamamlandi: $tamamlandi}';
+    return 'NoteModel{id: $id, title: $title, content: $content, color: $color, createdAt: $createdAt, updatedAt: $updatedAt}';
   }
 }
 
-// Not kategorileri sabit değerleri
-class NoteCategory {
-  static const String genel = 'Genel';
-  static const String pazarlama = 'Pazarlama';
-  static const String personel = 'Personel';
-  static const String uretim = 'Üretim';
-  static const String finans = 'Finans';
-  static const String musteri = 'Müşteri';
-  static const String tedarik = 'Tedarik';
-  static const String kalite = 'Kalite';
-  static const String teknoloji = 'Teknoloji';
-  static const String hukuk = 'Hukuk';
-  static const String satis = 'Satış';
-  static const String proje = 'Proje';
-
-  static List<String> get tumKategoriler => [
-        genel,
-        pazarlama,
-        personel,
-        uretim,
-        finans,
-        musteri,
-        tedarik,
-        kalite,
-        teknoloji,
-        hukuk,
-        satis,
-        proje,
-      ];
-
-  // Kategori ikonları
-  static Map<String, String> get kategoriIkonlari => {
-        genel: '📝',
-        pazarlama: '📊',
-        personel: '👥',
-        uretim: '🏭',
-        finans: '💰',
-        musteri: '🤝',
-        tedarik: '📦',
-        kalite: '✅',
-        teknoloji: '💻',
-        hukuk: '⚖️',
-        satis: '🛍️',
-        proje: '🎯',
-      };
-}
-
-// Not renkleri sabit değerleri
-class NoteColors {
-  static const String mavi = '#2196F3';
-  static const String yesil = '#4CAF50';
-  static const String kirmizi = '#F44336';
-  static const String turuncu = '#FF9800';
-  static const String mor = '#9C27B0';
-  static const String pembe = '#E91E63';
-  static const String sari = '#FFEB3B';
-  static const String gri = '#9E9E9E';
-  static const String turkuaz = '#00BCD4';
-  static const String lime = '#CDDC39';
-
-  static List<String> get tumRenkler => [
-        mavi,
-        yesil,
-        kirmizi,
-        turuncu,
-        mor,
-        pembe,
-        sari,
-        gri,
-        turkuaz,
-        lime,
-      ];
-
-  // Renk isimleri
-  static Map<String, String> get renkIsimleri => {
-        mavi: 'Mavi',
-        yesil: 'Yeşil',
-        kirmizi: 'Kırmızı',
-        turuncu: 'Turuncu',
-        mor: 'Mor',
-        pembe: 'Pembe',
-        sari: 'Sarı',
-        gri: 'Gri',
-        turkuaz: 'Turkuaz',
-        lime: 'Lime',
-      };
-}
-
-// Önem seviyeleri
-class NotePriority {
-  static const int cokDusuk = 1;
-  static const int dusuk = 2;
-  static const int orta = 3;
-  static const int yuksek = 4;
-  static const int cokYuksek = 5;
-
-  static Map<int, String> get onemIsimleri => {
-        cokDusuk: 'Çok Düşük',
-        dusuk: 'Düşük',
-        orta: 'Orta',
-        yuksek: 'Yüksek',
-        cokYuksek: 'Çok Yüksek',
-      };
-
-  static Map<int, String> get onemIkonlari => {
-        cokDusuk: '⚪',
-        dusuk: '🔵',
-        orta: '🟡',
-        yuksek: '🟠',
-        cokYuksek: '🔴',
-      };
-
-  static List<int> get tumOnemler => [
-        cokDusuk,
-        dusuk,
-        orta,
-        yuksek,
-        cokYuksek,
-      ];
-} 
+// Cleaned for Web Build by Cursor 

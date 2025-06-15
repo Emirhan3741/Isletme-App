@@ -1,134 +1,149 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+enum ExpenseCategory {
+  rent,
+  electricity,
+  water,
+  naturalGas,
+  phone,
+  internet,
+  salary,
+  material,
+  cleaning,
+  advertising,
+  tax,
+  insurance,
+  fuel,
+  food,
+  education,
+  maintenance,
+  other,
+}
+
+extension ExpenseCategoryX on ExpenseCategory {
+  String get name => toString().split('.').last;
+  String get displayName {
+    switch (this) {
+      case ExpenseCategory.rent:
+        return 'Rent';
+      case ExpenseCategory.electricity:
+        return 'Electricity';
+      case ExpenseCategory.water:
+        return 'Water';
+      case ExpenseCategory.naturalGas:
+        return 'Natural Gas';
+      case ExpenseCategory.phone:
+        return 'Phone';
+      case ExpenseCategory.internet:
+        return 'Internet';
+      case ExpenseCategory.salary:
+        return 'Salary';
+      case ExpenseCategory.material:
+        return 'Material';
+      case ExpenseCategory.cleaning:
+        return 'Cleaning';
+      case ExpenseCategory.advertising:
+        return 'Advertising';
+      case ExpenseCategory.tax:
+        return 'Tax';
+      case ExpenseCategory.insurance:
+        return 'Insurance';
+      case ExpenseCategory.fuel:
+        return 'Fuel';
+      case ExpenseCategory.food:
+        return 'Food';
+      case ExpenseCategory.education:
+        return 'Education';
+      case ExpenseCategory.maintenance:
+        return 'Maintenance';
+      case ExpenseCategory.other:
+        return 'Other';
+    }
+  }
+}
+
+ExpenseCategory expenseCategoryFromString(String value) {
+  return ExpenseCategory.values.firstWhere(
+    (e) => e.name == value,
+    orElse: () => ExpenseCategory.other,
+  );
+}
+
+enum PaymentMethod {
+  cash,
+  credit,
+  transfer,
+}
+
+extension PaymentMethodExtension on PaymentMethod {
+  String get displayName {
+    switch (this) {
+      case PaymentMethod.cash:
+        return 'Cash';
+      case PaymentMethod.credit:
+        return 'Credit';
+      case PaymentMethod.transfer:
+        return 'Transfer';
+    }
+  }
+}
+
 class ExpenseModel {
   final String id;
-  final String kategori;
-  final double tutar;
-  final DateTime tarih;
-  final String not;
-  final Timestamp olusturulmaTarihi;
-  final String ekleyenKullaniciId;
+  final double amount;
+  final ExpenseCategory category;
+  final DateTime createdAt;
 
   ExpenseModel({
     required this.id,
-    required this.kategori,
-    required this.tutar,
-    required this.tarih,
-    required this.not,
-    required this.olusturulmaTarihi,
-    required this.ekleyenKullaniciId,
+    required this.amount,
+    required this.category,
+    required this.createdAt,
   });
 
-  // Firestore'dan gelen verileri modele dönüştürme
-  factory ExpenseModel.fromMap(Map<String, dynamic> map, String documentId) {
+  factory ExpenseModel.fromMap(Map<String, dynamic> map, String id) {
+    double parseAmount(dynamic value) {
+      if (value == null) return 0.0;
+      if (value is double) return value;
+      if (value is int) return value.toDouble();
+      if (value is String) {
+        return double.tryParse(value.replaceAll(',', '.')) ?? 0.0;
+      }
+      return 0.0;
+    }
     return ExpenseModel(
-      id: documentId,
-      kategori: map['kategori'] ?? '',
-      tutar: (map['tutar'] ?? 0.0).toDouble(),
-      not: map['not'] ?? '',
-      tarih: (map['tarih'] as Timestamp).toDate(),
-      olusturulmaTarihi: map['olusturulmaTarihi'] ?? Timestamp.now(),
-      ekleyenKullaniciId: map['ekleyenKullaniciId'] ?? '',
+      id: id,
+      amount: parseAmount(map['amount']),
+      category: map['category'] is String
+          ? expenseCategoryFromString(map['category'])
+          : ExpenseCategory.other,
+      createdAt: map['createdAt'] is Timestamp
+          ? (map['createdAt'] as Timestamp).toDate()
+          : DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
     );
   }
 
-  // Model verisini Firestore formatına dönüştürme
   Map<String, dynamic> toMap() {
     return {
-      'kategori': kategori,
-      'tutar': tutar,
-      'not': not,
-      'tarih': Timestamp.fromDate(tarih),
-      'olusturulmaTarihi': olusturulmaTarihi,
-      'ekleyenKullaniciId': ekleyenKullaniciId,
+      'amount': amount,
+      'category': category.name,
+      'createdAt': createdAt,
     };
   }
 
-  // Model kopyalama fonksiyonu
   ExpenseModel copyWith({
     String? id,
-    String? kategori,
-    double? tutar,
-    DateTime? tarih,
-    String? not,
-    Timestamp? olusturulmaTarihi,
-    String? ekleyenKullaniciId,
+    double? amount,
+    ExpenseCategory? category,
+    DateTime? createdAt,
   }) {
     return ExpenseModel(
       id: id ?? this.id,
-      kategori: kategori ?? this.kategori,
-      tutar: tutar ?? this.tutar,
-      tarih: tarih ?? this.tarih,
-      not: not ?? this.not,
-      olusturulmaTarihi: olusturulmaTarihi ?? this.olusturulmaTarihi,
-      ekleyenKullaniciId: ekleyenKullaniciId ?? this.ekleyenKullaniciId,
+      amount: amount ?? this.amount,
+      category: category ?? this.category,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
-
-  @override
-  String toString() {
-    return 'ExpenseModel{id: $id, kategori: $kategori, tutar: $tutar, tarih: $tarih}';
-  }
 }
 
-// Gider kategorileri sabit değerleri
-class ExpenseCategory {
-  static const String kira = 'Kira';
-  static const String elektrik = 'Elektrik';
-  static const String su = 'Su';
-  static const String dogalgaz = 'Doğalgaz';
-  static const String telefon = 'Telefon';
-  static const String internet = 'İnternet';
-  static const String maas = 'Maaş';
-  static const String malzeme = 'Malzeme';
-  static const String temizlik = 'Temizlik';
-  static const String reklam = 'Reklam';
-  static const String vergi = 'Vergi';
-  static const String sigorta = 'Sigorta';
-  static const String yakıt = 'Yakıt';
-  static const String yemek = 'Yemek';
-  static const String egitim = 'Eğitim';
-  static const String bakim = 'Bakım';
-  static const String diger = 'Diğer';
-
-  static List<String> get tumKategoriler => [
-        kira,
-        elektrik,
-        su,
-        dogalgaz,
-        telefon,
-        internet,
-        maas,
-        malzeme,
-        temizlik,
-        reklam,
-        vergi,
-        sigorta,
-        yakıt,
-        yemek,
-        egitim,
-        bakim,
-        diger,
-      ];
-
-  // Kategori ikonları
-  static Map<String, String> get kategoriIkonlari => {
-        kira: '🏠',
-        elektrik: '⚡',
-        su: '💧',
-        dogalgaz: '🔥',
-        telefon: '📞',
-        internet: '📶',
-        maas: '💰',
-        malzeme: '📦',
-        temizlik: '🧹',
-        reklam: '📢',
-        vergi: '📋',
-        sigorta: '🛡️',
-        yakıt: '⛽',
-        yemek: '🍽️',
-        egitim: '📚',
-        bakim: '🔧',
-        diger: '💼',
-      };
-}
+// Cleaned for Web Build by Cursor

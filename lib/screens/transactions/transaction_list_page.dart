@@ -6,9 +6,12 @@ import '../../services/transaction_service.dart';
 import '../../services/customer_service.dart';
 import '../../models/customer_model.dart';
 import 'add_edit_transaction_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 class TransactionListPage extends StatefulWidget {
-  const TransactionListPage({super.key});
+  const TransactionListPage({Key? key}) : super(key: key);
 
   @override
   State<TransactionListPage> createState() => _TransactionListPageState();
@@ -20,8 +23,9 @@ class _TransactionListPageState extends State<TransactionListPage> {
   final TextEditingController _searchController = TextEditingController();
 
   String _searchQuery = '';
-  String _selectedFilter = 'Tümü'; // Tümü, Ödendi, Borç
+  PaymentStatus? _selectedFilter;
   Map<String, CustomerModel> _customers = {};
+  CustomerModel? customer;
 
   @override
   void initState() {
@@ -37,7 +41,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
 
   // Müşteri bilgilerini yükle (cache için)
   void _loadCustomers() {
-    _customerService.getCustomers().listen((customers) {
+    _customerService.getCustomers().then((customers) {
       final customerMap = <String, CustomerModel>{};
       for (var customer in customers) {
         customerMap[customer.id] = customer;
@@ -55,22 +59,21 @@ class _TransactionListPageState extends State<TransactionListPage> {
     List<TransactionModel> filtered = transactions;
 
     // Ödeme durumu filtresi
-    if (_selectedFilter != 'Tümü') {
+    if (_selectedFilter != null) {
       filtered = filtered.where((transaction) => 
-        transaction.odemeDurumu == _selectedFilter).toList();
+        transaction.paymentStatus == _selectedFilter).toList();
     }
 
     // Arama filtresi
     if (_searchQuery.isNotEmpty) {
       filtered = filtered.where((transaction) {
-        final customer = _customers[transaction.musteriId];
+        final customer = _customers[transaction.customerId];
         final customerName = customer != null 
-          ? '${customer.ad} ${customer.soyad}'.toLowerCase()
+          ? '${customer.name} ${customer.email}'.toLowerCase()
           : '';
-        
-        return transaction.islemAdi.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+        return transaction.operationName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
                customerName.contains(_searchQuery.toLowerCase()) ||
-               transaction.tutar.toString().contains(_searchQuery);
+               transaction.amount.toString().contains(_searchQuery);
       }).toList();
     }
 
@@ -173,40 +176,36 @@ class _TransactionListPageState extends State<TransactionListPage> {
             },
           ),
           const SizedBox(height: 12),
-          
           // Filtre butonları
-          Row(
-            children: [
-              Text(
-                'Filtrele: ',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                FilterChip(
+                  label: const Text('All'),
+                  selected: _selectedFilter == null,
+                  onSelected: (selected) {
+                    setState(() {
+                      _selectedFilter = null;
+                    });
+                  },
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: ['Tümü', 'Ödendi', 'Borç'].map((filter) {
-                      final isSelected = _selectedFilter == filter;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: FilterChip(
-                          label: Text(filter),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            setState(() {
-                              _selectedFilter = filter;
-                            });
-                          },
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
-            ],
+                ...PaymentStatus.values.map((status) {
+                  return Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: FilterChip(
+                      label: Text(status.name),
+                      selected: _selectedFilter == status,
+                      onSelected: (selected) {
+                        setState(() {
+                          _selectedFilter = selected ? status : null;
+                        });
+                      },
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
           ),
         ],
       ),
@@ -215,96 +214,37 @@ class _TransactionListPageState extends State<TransactionListPage> {
 
   // İşlem kartı
   Widget _buildTransactionCard(TransactionModel transaction) {
-    final customer = _customers[transaction.musteriId];
-    final customerName = customer != null 
-        ? '${customer.ad} ${customer.soyad}'
-        : 'Müşteri bulunamadı';
-
-    final isPaid = transaction.odemeDurumu == OdemeDurumu.odendi;
-    final statusColor = isPaid ? Colors.green : Colors.red;
-
+    final customer = _customers[transaction.customerId];
+    final customerName = customer != null ? '${customer.name} ${customer.email}' : 'Unknown';
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => _showTransactionDetails(transaction, customer),
+        onTap: () => _showTransactionDetails(transaction),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Üst satır - İşlem adı ve tutar
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: Text(
-                      transaction.islemAdi,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    '${NumberFormat('#,##0.00', 'tr_TR').format(transaction.tutar)} ₺',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: statusColor,
-                    ),
-                  ),
+                  Text(transaction.operationName, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  Text('${NumberFormat('#,##0.00', 'tr_TR').format(transaction.amount)} ₺', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.green[700])),
                 ],
               ),
               const SizedBox(height: 8),
-              
-              // İkinci satır - Müşteri ve tarih
               Row(
                 children: [
-                  Icon(Icons.person, size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      customerName,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ),
-                  Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 4),
-                  Text(
-                    DateFormat('dd.MM.yyyy').format(transaction.tarih),
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
+                  Text('Customer: $customerName'),
+                  const SizedBox(width: 16),
+                  Text('Status: ${transaction.paymentStatus.name}'),
+                  const SizedBox(width: 16),
+                  Text('Type: ${transaction.paymentType.name}'),
                 ],
               ),
               const SizedBox(height: 8),
-              
-              // Alt satır - Durum ve ödeme tipi
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: statusColor.withOpacity(0.3)),
-                    ),
-                    child: Text(
-                      transaction.odemeDurumu,
-                      style: TextStyle(
-                        color: statusColor,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    transaction.odemeTipi,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
+              Text('Date: ${DateFormat('dd.MM.yyyy').format(transaction.date)}'),
             ],
           ),
         ),
@@ -313,7 +253,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
   }
 
   // İşlem detayları modal
-  void _showTransactionDetails(TransactionModel transaction, CustomerModel? customer) {
+  void _showTransactionDetails(TransactionModel transaction) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -386,15 +326,15 @@ class _TransactionListPageState extends State<TransactionListPage> {
                         const SizedBox(height: 16),
                         
                         // Detay bilgileri
-                        _DetailRow('İşlem Adı', transaction.islemAdi),
-                        _DetailRow('Tutar', '${NumberFormat('#,##0.00', 'tr_TR').format(transaction.tutar)} ₺'),
-                        _DetailRow('Müşteri', customer != null ? '${customer.ad} ${customer.soyad}' : 'Bilinmiyor'),
-                        _DetailRow('Ödeme Durumu', transaction.odemeDurumu),
-                        _DetailRow('Ödeme Tipi', transaction.odemeTipi),
-                        _DetailRow('Tarih', DateFormat('dd.MM.yyyy').format(transaction.tarih)),
-                        if (transaction.not.isNotEmpty) 
-                          _DetailRow('Not', transaction.not),
-                        _DetailRow('Oluşturulma', DateFormat('dd.MM.yyyy HH:mm').format(transaction.olusturulmaTarihi.toDate())),
+                        _DetailRow('İşlem Adı', transaction.operationName),
+                        _DetailRow('Tutar', '${NumberFormat('#,##0.00', 'tr_TR').format(transaction.amount)} ₺'),
+                        _DetailRow('Müşteri', customer != null ? '${customer?.name} ${customer?.email}' : 'Bilinmiyor'),
+                        _DetailRow('Ödeme Durumu', transaction.paymentStatus.name),
+                        _DetailRow('Ödeme Tipi', transaction.paymentType.name),
+                        _DetailRow('Tarih', DateFormat('dd.MM.yyyy').format(transaction.date)),
+                        if (transaction.note.isNotEmpty) 
+                          _DetailRow('Not', transaction.note),
+                        _DetailRow('Oluşturulma', DateFormat('dd.MM.yyyy HH:mm').format(transaction.createdAt ?? DateTime.now())),
                       ],
                     ),
                   ),
@@ -413,7 +353,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('İşlemi Sil'),
-        content: Text('${transaction.islemAdi} işlemini silmek istediğinize emin misiniz?'),
+        content: Text('${transaction.operationName} işlemini silmek istediğinize emin misiniz?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -447,107 +387,96 @@ class _TransactionListPageState extends State<TransactionListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
     return Scaffold(
       appBar: AppBar(
         title: const Text('İşlemler'),
-        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AddEditTransactionPage()),
+              );
+              if (result == true) _refreshTransactions();
+            },
+          ),
+        ],
       ),
-      body: Column(
+      body: user == null
+          ? const Center(child: Text('Kullanıcı bulunamadı'))
+          : Column(
         children: [
-          // Finansal özet
-          _buildFinancialSummary(),
-          
-          // Filtre ve arama
-          _buildFilterBar(),
-          const SizedBox(height: 16),
-          
-          // İşlem listesi
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Tutar ara...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onChanged: (value) => setState(() => _searchQuery = value),
+            ),
+          ),
           Expanded(
-            child: StreamBuilder<List<TransactionModel>>(
-              stream: _transactionService.getTransactions(),
+            child: FutureBuilder<List<TransactionModel>>(
+              future: _transactionService.getTransactions(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
-                        const SizedBox(height: 16),
-                        Text('Hata: ${snapshot.error}'),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () => setState(() {}),
-                          child: const Text('Tekrar Dene'),
-                        ),
-                      ],
-                    ),
-                  );
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('Kayıtlı işlem yok.'));
                 }
-
-                final allTransactions = snapshot.data ?? [];
-                final filteredTransactions = _filterTransactions(allTransactions);
-
-                if (filteredTransactions.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.receipt_long, size: 64, color: Colors.grey[400]),
-                        const SizedBox(height: 16),
-                        Text(
-                          allTransactions.isEmpty 
-                              ? 'Henüz işlem bulunmuyor'
-                              : 'Filtreye uygun işlem bulunamadı',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          allTransactions.isEmpty
-                              ? 'İlk işleminizi eklemek için + butonuna tıklayın'
-                              : 'Farklı filtreler deneyin',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[500],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
+                final transactions = _filterTransactions(snapshot.data!);
+                if (transactions.isEmpty) {
+                  return const Center(child: Text('Aramanıza uygun işlem bulunamadı.'));
                 }
-
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    setState(() {});
+                return ListView.separated(
+                  itemCount: transactions.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, i) {
+                    final transaction = transactions[i];
+                    return ListTile(
+                      leading: const CircleAvatar(child: Icon(Icons.swap_horiz)),
+                      title: Text('${transaction.amount.toStringAsFixed(2)} ₺'),
+                      subtitle: Text(DateFormat('dd.MM.yyyy').format(transaction.createdAt)),
+                      trailing: Text(DateFormat('HH:mm').format(transaction.createdAt)),
+                      onTap: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AddEditTransactionPage(transaction: transaction),
+                          ),
+                        );
+                        if (result == true) _refreshTransactions();
+                      },
+                    );
                   },
-                  child: ListView.builder(
-                    itemCount: filteredTransactions.length,
-                    itemBuilder: (context, index) {
-                      return _buildTransactionCard(filteredTransactions[index]);
-                    },
-                  ),
                 );
               },
             ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AddEditTransactionPage(),
-            ),
-          );
-        },
-        child: const Icon(Icons.add),
-      ),
     );
+  }
+
+  Future<void> _refreshTransactions() async {
+    setState(() {});
   }
 }
 
@@ -642,4 +571,6 @@ class _DetailRow extends StatelessWidget {
       ),
     );
   }
-} 
+}
+
+// Cleaned for Web Build by Cursor 

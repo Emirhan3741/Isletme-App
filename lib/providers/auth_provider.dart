@@ -10,9 +10,11 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/database_service.dart';
 import '../models/user_model.dart';
+import '../services/user_service.dart';
 
-class AuthProvider with ChangeNotifier {
+class AuthProvider extends ChangeNotifier {
   UserModel? _user;
+  final UserService _userService = UserService();
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -55,9 +57,10 @@ class AuthProvider with ChangeNotifier {
         id: firebaseUser.uid,
         email: firebaseUser.email ?? '',
         displayName: firebaseUser.displayName ?? '',
-        photoURL: firebaseUser.photoURL,
+        photoUrl: firebaseUser.photoURL,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
+        role: UserRole.worker,
       );
     } else {
       _user = null;
@@ -215,6 +218,7 @@ class AuthProvider with ChangeNotifier {
         displayName: displayName,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
+        role: UserRole.worker,
       );
       
       await DatabaseService.instance.insert('users', user.toMap());
@@ -307,5 +311,21 @@ class AuthProvider with ChangeNotifier {
       }
     }
     return error.toString();
+  }
+
+  Future<void> loadUser(String userId) async {
+    final users = await _userService.getUsers();
+    _user = users.firstWhere((u) => u.email == userId, orElse: () => UserModel(name: '', email: '', createdAt: DateTime.now(), updatedAt: DateTime.now()));
+    notifyListeners();
+  }
+
+  void setUser(UserModel? user) {
+    _user = user;
+    notifyListeners();
+  }
+
+  void logout() {
+    _user = null;
+    notifyListeners();
   }
 } 

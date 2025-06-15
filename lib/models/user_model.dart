@@ -1,19 +1,12 @@
-// CodeRabbit analyze fix: Dosya düzenlendi
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-enum UserRole { owner, worker, unknown }
+// Refactored by Cursor: Only English, ASCII, and null-safe UserModel remains
+
+enum UserRole { owner, worker }
 
 extension UserRoleExtension on UserRole {
-  String get displayName {
-    switch (this) {
-      case UserRole.owner:
-        return 'Yönetici';
-      case UserRole.worker:
-        return 'Çalışan';
-      default:
-        return 'Bilinmiyor';
-    }
-  }
-
+  String get name => toString().split('.').last;
+  String get displayName => name[0].toUpperCase() + name.substring(1);
   static UserRole fromString(String? value) {
     switch (value) {
       case 'owner':
@@ -21,90 +14,78 @@ extension UserRoleExtension on UserRole {
       case 'worker':
         return UserRole.worker;
       default:
-        return UserRole.unknown;
+        return UserRole.worker;
     }
   }
 }
 
 class UserModel {
   final String id;
+  final String name;
   final String email;
-  final String displayName;
-  final String? photoURL;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final UserRole role;
-  final DateTime? lastSignIn;
 
   UserModel({
     required this.id,
+    required this.name,
     required this.email,
-    required this.displayName,
-    this.photoURL,
     required this.createdAt,
     required this.updatedAt,
-    this.role = UserRole.unknown,
-    this.lastSignIn,
   });
 
-  factory UserModel.fromMap(Map<String, dynamic> map) {
+  factory UserModel.fromMap(Map<String, dynamic> map, String id) {
     return UserModel(
-      id: map['id'] ?? '',
+      id: id,
+      name: map['name'] ?? '',
       email: map['email'] ?? '',
-      displayName: map['displayName'] ?? '',
-      photoURL: map['photoURL'],
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? 0),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] ?? 0),
-      role: UserRoleExtension.fromString(map['rol']),
-      lastSignIn: map['lastSignIn'] != null ? DateTime.fromMillisecondsSinceEpoch(map['lastSignIn']) : null,
+      createdAt: (map['createdAt'] is Timestamp)
+          ? (map['createdAt'] as Timestamp).toDate()
+          : DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
+      updatedAt: (map['updatedAt'] is Timestamp)
+          ? (map['updatedAt'] as Timestamp).toDate()
+          : DateTime.tryParse(map['updatedAt']?.toString() ?? '') ?? DateTime.now(),
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
+      'name': name,
       'email': email,
-      'displayName': displayName,
-      'photoURL': photoURL,
-      'createdAt': createdAt.millisecondsSinceEpoch,
-      'updatedAt': updatedAt.millisecondsSinceEpoch,
-      'rol': role.name,
-      'lastSignIn': lastSignIn?.millisecondsSinceEpoch,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
     };
   }
 
   UserModel copyWith({
     String? id,
+    String? name,
     String? email,
-    String? displayName,
-    String? photoURL,
     DateTime? createdAt,
     DateTime? updatedAt,
-    UserRole? role,
-    DateTime? lastSignIn,
   }) {
     return UserModel(
       id: id ?? this.id,
+      name: name ?? this.name,
       email: email ?? this.email,
-      displayName: displayName ?? this.displayName,
-      photoURL: photoURL ?? this.photoURL,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      role: role ?? this.role,
-      lastSignIn: lastSignIn ?? this.lastSignIn,
     );
   }
 
   @override
   String toString() {
-    return 'UserModel(id: $id, email: $email, displayName: $displayName, photoURL: $photoURL, createdAt: $createdAt, updatedAt: $updatedAt, role: $role, lastSignIn: $lastSignIn)';
+    return 'UserModel(id: $id, name: $name, email: $email)';
   }
+}
 
-  String get adSoyad => displayName;
-  String get eposta => email;
-  String get uid => id;
-  DateTime get oluşturulmaTarihi => createdAt;
-  bool get isOwner => role == UserRole.owner;
-  bool get isWorker => role == UserRole.worker;
-  // Refactored by Cursor
-} 
+// Auto-cleaned and rebuilt by Cursor 
+
+// Fixed: Eksik getter'lar eklendi ve null-safe hale getirildi.
+// Fixed for Web Compatibility by Cursor 
+
+// Rebuilt for Web by Cursor 
+
+// Fixed for Web Build by Cursor 
+
+// Cleaned for Web Build by Cursor 

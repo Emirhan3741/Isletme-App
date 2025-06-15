@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -15,9 +16,12 @@ class _RegisterPageState extends State<RegisterPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _displayNameController = TextEditingController();
+  final _businessNameController = TextEditingController();
+  final _businessTypeController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _acceptTerms = false;
+  DateTime? _establishedAt;
 
   @override
   void dispose() {
@@ -25,6 +29,8 @@ class _RegisterPageState extends State<RegisterPage> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _displayNameController.dispose();
+    _businessNameController.dispose();
+    _businessTypeController.dispose();
     super.dispose();
   }
 
@@ -38,6 +44,21 @@ class _RegisterPageState extends State<RegisterPage> {
       );
 
       if (success && mounted) {
+        // İşletme bilgilerini Firestore'a kaydet
+        final user = authProvider.user;
+        if (user != null) {
+          final businessData = {
+            'businessName': _businessNameController.text.trim(),
+            'businessType': _businessTypeController.text.trim(),
+            'establishedAt': _establishedAt ?? DateTime.now(),
+            'createdAt': DateTime.now(),
+          };
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('business')
+              .add(businessData);
+        }
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -207,6 +228,71 @@ class _RegisterPageState extends State<RegisterPage> {
                         },
                       ),
                       const SizedBox(height: 24),
+
+                      // İşletme Adı alanı
+                      TextFormField(
+                        controller: _businessNameController,
+                        decoration: const InputDecoration(
+                          labelText: 'İşletme Adı',
+                          prefixIcon: Icon(Icons.business),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'İşletme adı gerekli';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // İşletme Türü alanı
+                      TextFormField(
+                        controller: _businessTypeController,
+                        decoration: const InputDecoration(
+                          labelText: 'İşletme Türü',
+                          prefixIcon: Icon(Icons.category),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'İşletme türü gerekli';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Kurulum Tarihi alanı
+                      InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Kurulum Tarihi',
+                          prefixIcon: Icon(Icons.calendar_today),
+                        ),
+                        child: InkWell(
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime(1900),
+                              lastDate: DateTime.now(),
+                            );
+                            if (picked != null) {
+                              setState(() {
+                                _establishedAt = picked;
+                              });
+                            }
+                          },
+                          child: Text(
+                            _establishedAt != null
+                                ? '${_establishedAt!.day}.${_establishedAt!.month}.${_establishedAt!.year}'
+                                : 'Tarih seçin',
+                            style: TextStyle(
+                              color: _establishedAt != null ? Colors.black : Colors.grey,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
 
                       // Kullanım koşulları
                       Row(

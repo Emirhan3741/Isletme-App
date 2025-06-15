@@ -65,7 +65,7 @@ class NotificationService {
   // Gider hatırlatıcısı zamanla
   Future<void> scheduleExpenseReminder(ExpenseModel expense) async {
     // Gider tarihinden 1 gün önce hatırlatıcı ayarla
-    final reminderDate = expense.tarih.subtract(const Duration(days: 1));
+    final reminderDate = expense.date.subtract(const Duration(days: 1));
     
     // Eğer hatırlatıcı tarihi geçmişte ise, hatırlatıcı ayarlama
     if (reminderDate.isBefore(DateTime.now())) {
@@ -81,12 +81,12 @@ class NotificationService {
       0,  // Dakika 0
     );
 
-    final categoryIcon = ExpenseCategory.kategoriIkonlari[expense.kategori] ?? '💼';
+    final categoryIcon = getExpenseCategoryIcon(expense.category);
     
     await _notifications.zonedSchedule(
       expense.id.hashCode, // Unique ID
       'Gider Hatırlatıcısı',
-      'Yarın ${expense.kategori} gideriniz var: ${expense.tutar.toStringAsFixed(2)} ₺ $categoryIcon',
+      'Yarın ${expense.category} gideriniz var: ${expense.amount.toStringAsFixed(2)} ₺ $categoryIcon',
       tz.TZDateTime.from(scheduledDate, tz.local),
       const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -105,11 +105,10 @@ class NotificationService {
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
       payload: 'expense_${expense.id}',
     );
 
-    print('Gider hatırlatıcısı ayarlandı: ${expense.kategori} - $scheduledDate');
+    print('Gider hatırlatıcısı ayarlandı: ${expense.category} - $scheduledDate');
   }
 
   // Gider hatırlatıcısını iptal et
@@ -188,7 +187,7 @@ class NotificationService {
     
     if (iosImplementation != null) {
       final settings = await iosImplementation.checkPermissions();
-      return settings.isEnabled;
+      return settings?.isEnabled ?? false;
     }
     
     return false;
@@ -225,11 +224,50 @@ class NotificationService {
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
       payload: 'daily_expense_check',
       matchDateTimeComponents: DateTimeComponents.time, // Her gün tekrarla
     );
 
     print('Günlük gider kontrolü hatırlatıcısı ayarlandı: $scheduledDate');
+  }
+
+  // Kategori ikonunu almak için fonksiyon
+  String getExpenseCategoryIcon(ExpenseCategory category) {
+    switch (category) {
+      case ExpenseCategory.rent:
+        return '🏠';
+      case ExpenseCategory.electricity:
+        return '⚡';
+      case ExpenseCategory.water:
+        return '💧';
+      case ExpenseCategory.naturalGas:
+        return '🔥';
+      case ExpenseCategory.phone:
+        return '📞';
+      case ExpenseCategory.internet:
+        return '📶';
+      case ExpenseCategory.salary:
+        return '💰';
+      case ExpenseCategory.material:
+        return '📦';
+      case ExpenseCategory.cleaning:
+        return '🧹';
+      case ExpenseCategory.advertising:
+        return '📢';
+      case ExpenseCategory.tax:
+        return '📋';
+      case ExpenseCategory.insurance:
+        return '🛡️';
+      case ExpenseCategory.fuel:
+        return '⛽';
+      case ExpenseCategory.food:
+        return '🍽️';
+      case ExpenseCategory.education:
+        return '📚';
+      case ExpenseCategory.maintenance:
+        return '🔧';
+      case ExpenseCategory.other:
+        return '💼';
+    }
   }
 } 

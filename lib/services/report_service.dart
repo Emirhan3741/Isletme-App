@@ -7,6 +7,19 @@ import '../models/appointment_model.dart';
 import '../models/note_model.dart';
 import '../models/customer_model.dart';
 
+enum PaymentStatus { paid, debt }
+
+extension PaymentStatusExtension on PaymentStatus {
+  String get displayName {
+    switch (this) {
+      case PaymentStatus.paid:
+        return 'Paid';
+      case PaymentStatus.debt:
+        return 'Debt';
+    }
+  }
+}
+
 class ReportService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -55,13 +68,13 @@ class ReportService {
 
       Query query = _firestore
           .collection(_transactionsCollection)
-          .where('tarih', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          .where('tarih', isLessThan: Timestamp.fromDate(endOfDay))
-          .where('odemeDurumu', isEqualTo: IslemOdemeDurumu.odendi);
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('date', isLessThan: Timestamp.fromDate(endOfDay))
+          .where('paymentStatus', isEqualTo: PaymentStatus.paid);
 
       // Worker sadece kendi işlemlerini görebilir
       if (!userIsOwner) {
-        query = query.where('ekleyenKullaniciId', isEqualTo: currentUser!.uid);
+        query = query.where('addedByUserId', isEqualTo: currentUser!.uid);
       }
 
       final snapshot = await query.get();
@@ -69,7 +82,7 @@ class ReportService {
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        totalIncome += (data['tutar'] ?? 0.0).toDouble();
+        totalIncome += (data['amount'] ?? 0.0).toDouble();
       }
 
       return totalIncome;
@@ -91,12 +104,12 @@ class ReportService {
 
       Query query = _firestore
           .collection(_expensesCollection)
-          .where('tarih', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
-          .where('tarih', isLessThan: Timestamp.fromDate(endOfMonth));
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
+          .where('date', isLessThan: Timestamp.fromDate(endOfMonth));
 
       // Worker sadece kendi giderlerini görebilir
       if (!userIsOwner) {
-        query = query.where('ekleyenKullaniciId', isEqualTo: currentUser!.uid);
+        query = query.where('addedByUserId', isEqualTo: currentUser!.uid);
       }
 
       final snapshot = await query.get();
@@ -104,7 +117,7 @@ class ReportService {
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        totalExpenses += (data['tutar'] ?? 0.0).toDouble();
+        totalExpenses += (data['amount'] ?? 0.0).toDouble();
       }
 
       return totalExpenses;
@@ -122,11 +135,11 @@ class ReportService {
       final bool userIsOwner = await isOwner();
       Query query = _firestore
           .collection(_transactionsCollection)
-          .where('odemeDurumu', isEqualTo: IslemOdemeDurumu.borc);
+          .where('paymentStatus', isEqualTo: PaymentStatus.debt);
 
       // Worker sadece kendi işlemlerini görebilir
       if (!userIsOwner) {
-        query = query.where('ekleyenKullaniciId', isEqualTo: currentUser!.uid);
+        query = query.where('addedByUserId', isEqualTo: currentUser!.uid);
       }
 
       final snapshot = await query.get();
@@ -134,7 +147,7 @@ class ReportService {
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        totalDebt += (data['tutar'] ?? 0.0).toDouble();
+        totalDebt += (data['amount'] ?? 0.0).toDouble();
       }
 
       return totalDebt;
@@ -156,12 +169,12 @@ class ReportService {
 
       Query query = _firestore
           .collection(_appointmentsCollection)
-          .where('baslangicTarihi', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          .where('baslangicTarihi', isLessThan: Timestamp.fromDate(endOfDay));
+          .where('startDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('startDate', isLessThan: Timestamp.fromDate(endOfDay));
 
       // Worker sadece kendi randevularını görebilir
       if (!userIsOwner) {
-        query = query.where('calisanId', isEqualTo: currentUser!.uid);
+        query = query.where('employeeId', isEqualTo: currentUser!.uid);
       }
 
       final snapshot = await query.get();
@@ -185,12 +198,12 @@ class ReportService {
 
       Query query = _firestore
           .collection(_appointmentsCollection)
-          .where('baslangicTarihi', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfWeekMidnight))
-          .where('baslangicTarihi', isLessThan: Timestamp.fromDate(endOfWeek));
+          .where('startDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfWeekMidnight))
+          .where('startDate', isLessThan: Timestamp.fromDate(endOfWeek));
 
       // Worker sadece kendi randevularını görebilir
       if (!userIsOwner) {
-        query = query.where('calisanId', isEqualTo: currentUser!.uid);
+        query = query.where('employeeId', isEqualTo: currentUser!.uid);
       }
 
       final snapshot = await query.get();
@@ -203,7 +216,7 @@ class ReportService {
 
   // En çok yapılan işlem türü
   Future<Map<String, dynamic>> getMostCommonTransactionType() async {
-    if (currentUser == null) return {'type': 'Bilinmiyor', 'count': 0};
+    if (currentUser == null) return {'type': 'Unknown', 'count': 0};
 
     try {
       final bool userIsOwner = await isOwner();
@@ -211,7 +224,7 @@ class ReportService {
 
       // Worker sadece kendi işlemlerini görebilir
       if (!userIsOwner) {
-        query = query.where('ekleyenKullaniciId', isEqualTo: currentUser!.uid);
+        query = query.where('addedByUserId', isEqualTo: currentUser!.uid);
       }
 
       final snapshot = await query.get();
@@ -219,12 +232,12 @@ class ReportService {
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        final islemTuru = data['islemTuru'] ?? 'Bilinmiyor';
-        typeCounts[islemTuru] = (typeCounts[islemTuru] ?? 0) + 1;
+        final transactionType = data['transactionType'] ?? 'Unknown';
+        typeCounts[transactionType] = (typeCounts[transactionType] ?? 0) + 1;
       }
 
       if (typeCounts.isEmpty) {
-        return {'type': 'Bilinmiyor', 'count': 0};
+        return {'type': 'Unknown', 'count': 0};
       }
 
       // En çok tekrar eden işlem türünü bul
@@ -232,13 +245,13 @@ class ReportService {
       return {'type': mostCommon.key, 'count': mostCommon.value};
     } catch (e) {
       print('En çok yapılan işlem türü hatası: $e');
-      return {'type': 'Bilinmiyor', 'count': 0};
+      return {'type': 'Unknown', 'count': 0};
     }
   }
 
   // En çok randevu alan müşteri
   Future<Map<String, dynamic>> getMostFrequentCustomer() async {
-    if (currentUser == null) return {'name': 'Bilinmiyor', 'count': 0};
+    if (currentUser == null) return {'name': 'Unknown', 'count': 0};
 
     try {
       final bool userIsOwner = await isOwner();
@@ -246,7 +259,7 @@ class ReportService {
 
       // Worker sadece kendi randevularını görebilir
       if (!userIsOwner) {
-        query = query.where('calisanId', isEqualTo: currentUser!.uid);
+        query = query.where('employeeId', isEqualTo: currentUser!.uid);
       }
 
       final snapshot = await query.get();
@@ -254,14 +267,14 @@ class ReportService {
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        final musteriId = data['musteriId'] ?? '';
-        if (musteriId.isNotEmpty) {
-          customerCounts[musteriId] = (customerCounts[musteriId] ?? 0) + 1;
+        final customerId = data['customerId'] ?? '';
+        if (customerId.isNotEmpty) {
+          customerCounts[customerId] = (customerCounts[customerId] ?? 0) + 1;
         }
       }
 
       if (customerCounts.isEmpty) {
-        return {'name': 'Bilinmiyor', 'count': 0};
+        return {'name': 'Unknown', 'count': 0};
       }
 
       // En çok randevu alan müşteri ID'sini bul
@@ -276,17 +289,17 @@ class ReportService {
 
         if (customerDoc.exists) {
           final customerData = customerDoc.data() as Map<String, dynamic>;
-          final customerName = '${customerData['isim']} ${customerData['soyisim']}';
+          final customerName = '${customerData['name']} ${customerData['surname']}';
           return {'name': customerName, 'count': mostFrequentCustomerId.value};
         }
       } catch (e) {
         print('Müşteri bilgisi getirme hatası: $e');
       }
 
-      return {'name': 'Müşteri #${mostFrequentCustomerId.key.substring(0, 8)}', 'count': mostFrequentCustomerId.value};
+      return {'name': 'Customer #${mostFrequentCustomerId.key.substring(0, 8)}', 'count': mostFrequentCustomerId.value};
     } catch (e) {
       print('En çok randevu alan müşteri hatası: $e');
-      return {'name': 'Bilinmiyor', 'count': 0};
+      return {'name': 'Unknown', 'count': 0};
     }
   }
 
@@ -306,22 +319,22 @@ class ReportService {
         // Gelir hesapla
         Query incomeQuery = _firestore
             .collection(_transactionsCollection)
-            .where('tarih', isGreaterThanOrEqualTo: Timestamp.fromDate(monthStart))
-            .where('tarih', isLessThan: Timestamp.fromDate(monthEnd))
-            .where('odemeDurumu', isEqualTo: IslemOdemeDurumu.odendi);
+            .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(monthStart))
+            .where('date', isLessThan: Timestamp.fromDate(monthEnd))
+            .where('paymentStatus', isEqualTo: PaymentStatus.paid);
 
         if (!userIsOwner) {
-          incomeQuery = incomeQuery.where('ekleyenKullaniciId', isEqualTo: currentUser!.uid);
+          incomeQuery = incomeQuery.where('addedByUserId', isEqualTo: currentUser!.uid);
         }
 
         // Gider hesapla
         Query expenseQuery = _firestore
             .collection(_expensesCollection)
-            .where('tarih', isGreaterThanOrEqualTo: Timestamp.fromDate(monthStart))
-            .where('tarih', isLessThan: Timestamp.fromDate(monthEnd));
+            .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(monthStart))
+            .where('date', isLessThan: Timestamp.fromDate(monthEnd));
 
         if (!userIsOwner) {
-          expenseQuery = expenseQuery.where('ekleyenKullaniciId', isEqualTo: currentUser!.uid);
+          expenseQuery = expenseQuery.where('addedByUserId', isEqualTo: currentUser!.uid);
         }
 
         final incomeSnapshot = await incomeQuery.get();
@@ -332,12 +345,12 @@ class ReportService {
 
         for (var doc in incomeSnapshot.docs) {
           final data = doc.data() as Map<String, dynamic>;
-          monthlyIncome += (data['tutar'] ?? 0.0).toDouble();
+          monthlyIncome += (data['amount'] ?? 0.0).toDouble();
         }
 
         for (var doc in expenseSnapshot.docs) {
           final data = doc.data() as Map<String, dynamic>;
-          monthlyExpense += (data['tutar'] ?? 0.0).toDouble();
+          monthlyExpense += (data['amount'] ?? 0.0).toDouble();
         }
 
         monthlyData.add({
@@ -364,7 +377,7 @@ class ReportService {
       Query query = _firestore.collection(_transactionsCollection);
 
       if (!userIsOwner) {
-        query = query.where('ekleyenKullaniciId', isEqualTo: currentUser!.uid);
+        query = query.where('addedByUserId', isEqualTo: currentUser!.uid);
       }
 
       final snapshot = await query.get();
@@ -372,9 +385,9 @@ class ReportService {
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        final islemTuru = data['islemTuru'] ?? 'Bilinmiyor';
-        final tutar = (data['tutar'] ?? 0.0).toDouble();
-        typeAmounts[islemTuru] = (typeAmounts[islemTuru] ?? 0.0) + tutar;
+        final transactionType = data['transactionType'] ?? 'Unknown';
+        final amount = (data['amount'] ?? 0.0).toDouble();
+        typeAmounts[transactionType] = (typeAmounts[transactionType] ?? 0.0) + amount;
       }
 
       List<Map<String, dynamic>> distribution = [];
@@ -414,11 +427,11 @@ class ReportService {
 
         Query query = _firestore
             .collection(_appointmentsCollection)
-            .where('baslangicTarihi', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-            .where('baslangicTarihi', isLessThan: Timestamp.fromDate(endOfDay));
+            .where('startDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+            .where('startDate', isLessThan: Timestamp.fromDate(endOfDay));
 
         if (!userIsOwner) {
-          query = query.where('calisanId', isEqualTo: currentUser!.uid);
+          query = query.where('employeeId', isEqualTo: currentUser!.uid);
         }
 
         final snapshot = await query.get();
@@ -446,7 +459,7 @@ class ReportService {
       Query query = _firestore.collection(_notesCollection);
 
       if (!userIsOwner) {
-        query = query.where('kullaniciId', isEqualTo: currentUser!.uid);
+        query = query.where('userId', isEqualTo: currentUser!.uid);
       }
 
       final snapshot = await query.get();
@@ -454,8 +467,8 @@ class ReportService {
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        final kategori = data['kategori'] ?? 'Bilinmiyor';
-        categoryCounts[kategori] = (categoryCounts[kategori] ?? 0) + 1;
+        final category = data['category'] ?? 'Unknown';
+        categoryCounts[category] = (categoryCounts[category] ?? 0) + 1;
       }
 
       List<Map<String, dynamic>> distribution = [];
@@ -466,7 +479,7 @@ class ReportService {
           'category': category,
           'count': count,
           'percentage': total > 0 ? (count / total * 100) : 0.0,
-          'icon': NoteCategory.kategoriIkonlari[category] ?? '📝',
+          'icon': getNoteCategoryIcon(NoteCategory.values[int.parse(category)]),
         });
       });
 
@@ -489,7 +502,7 @@ class ReportService {
       Query query = _firestore.collection(_transactionsCollection);
 
       if (!userIsOwner) {
-        query = query.where('ekleyenKullaniciId', isEqualTo: currentUser!.uid);
+        query = query.where('addedByUserId', isEqualTo: currentUser!.uid);
       }
 
       final snapshot = await query.get();
@@ -497,11 +510,11 @@ class ReportService {
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        final musteriId = data['musteriId'] ?? '';
-        final tutar = (data['tutar'] ?? 0.0).toDouble();
+        final customerId = data['customerId'] ?? '';
+        final amount = (data['amount'] ?? 0.0).toDouble();
 
-        if (musteriId.isNotEmpty) {
-          customerSpending[musteriId] = (customerSpending[musteriId] ?? 0.0) + tutar;
+        if (customerId.isNotEmpty) {
+          customerSpending[customerId] = (customerSpending[customerId] ?? 0.0) + amount;
         }
       }
 
@@ -521,10 +534,10 @@ class ReportService {
               .doc(customerId)
               .get();
 
-          String customerName = 'Müşteri #${customerId.substring(0, 8)}';
+          String customerName = 'Customer #${customerId.substring(0, 8)}';
           if (customerDoc.exists) {
             final customerData = customerDoc.data() as Map<String, dynamic>;
-            customerName = '${customerData['isim']} ${customerData['soyisim']}';
+            customerName = '${customerData['name']} ${customerData['surname']}';
           }
 
           topCustomers.add({
@@ -535,7 +548,7 @@ class ReportService {
         } catch (e) {
           print('Müşteri bilgisi getirme hatası: $e');
           topCustomers.add({
-            'name': 'Müşteri #${customerId.substring(0, 8)}',
+            'name': 'Customer #${customerId.substring(0, 8)}',
             'amount': amount,
             'rank': i + 1,
           });
@@ -552,14 +565,14 @@ class ReportService {
   // Yardımcı metodlar
   String _getMonthName(int month) {
     const months = [
-      '', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-      'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+      '', 'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
     ];
     return months[month];
   }
 
   String _getDayName(int weekday) {
-    const days = ['', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+    const days = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return days[weekday];
   }
 
@@ -588,6 +601,36 @@ class ReportService {
     } catch (e) {
       print('Genel özet raporu hatası: $e');
       return {};
+    }
+  }
+
+  // Kategori ikonunu almak için fonksiyon
+  String getNoteCategoryIcon(NoteCategory category) {
+    switch (category) {
+      case NoteCategory.general:
+        return '📝';
+      case NoteCategory.marketing:
+        return '📊';
+      case NoteCategory.personnel:
+        return '👥';
+      case NoteCategory.production:
+        return '🏭';
+      case NoteCategory.finance:
+        return '💰';
+      case NoteCategory.customer:
+        return '🤝';
+      case NoteCategory.supply:
+        return '📦';
+      case NoteCategory.quality:
+        return '✅';
+      case NoteCategory.technology:
+        return '💻';
+      case NoteCategory.law:
+        return '⚖️';
+      case NoteCategory.sales:
+        return '🛍️';
+      case NoteCategory.project:
+        return '🎯';
     }
   }
 }
