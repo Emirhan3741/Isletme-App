@@ -1,0 +1,51 @@
+name: randevu_erp
+description: "Modern İşletme Yönetim Sistemi - Randevu, Müşteri, Finansal Takip"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Firebase (sadece web ve mobil)
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.15.3
+  cloud_firestore: ^4.13.6
+
+  # Local Storage (desktop için)
+  shared_preferences: ^2.2.2
+  sqflite: ^2.3.0
+  sqflite_common_ffi: ^2.3.0+4
+  path: ^1.8.3
+
+  # State Management & UI
+  provider: ^6.1.1
+  google_sign_in: ^6.1.6
+
+  # Notifications
+  flutter_local_notifications: ^16.3.0
+  timezone: ^0.9.2
+
+  # Charts & Calendar
+  fl_chart: ^0.65.0
+  table_calendar: ^3.0.9
+
+  # Utilities
+  intl: ^0.20.2
+
+  # Icons
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true

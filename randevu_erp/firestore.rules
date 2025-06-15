@@ -1,0 +1,95 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Kullanıcı rolü kontrol fonksiyonu
+    function isOwner() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rol == 'owner';
+    }
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isResourceOwner(resource) {
+      return request.auth.uid == resource.data.kullaniciId;
+    }
+    
+    function isResourceOwnerOrCreator(resource) {
+      return request.auth.uid == resource.data.kullaniciId || 
+             request.auth.uid == resource.data.ekleyenKullaniciId;
+    }
+
+    // Users collection - Kullanıcı profilleri
+    match /users/{userId} {
+      allow read, write: if request.auth.uid == userId;
+      allow read: if isOwner(); // Owner tüm kullanıcıları görebilir
+      allow create: if isOwner(); // Sadece owner yeni kullanıcı oluşturabilir
+      allow update: if isOwner() || request.auth.uid == userId;
+      allow delete: if isOwner() && request.auth.uid != userId; // Kendi hesabını silemez
+    }
+
+    // Customers collection - Müşteriler
+    match /customers/{customerId} {
+      allow read, write: if isAuthenticated() && (
+        isOwner() || isResourceOwnerOrCreator(resource)
+      );
+      allow create: if isAuthenticated();
+    }
+
+    // Appointments collection - Randevular
+    match /appointments/{appointmentId} {
+      allow read, write: if isAuthenticated() && (
+        isOwner() || 
+        request.auth.uid == resource.data.calisanId ||
+        request.auth.uid == resource.data.ekleyenKullaniciId
+      );
+      allow create: if isAuthenticated();
+    }
+
+    // Transactions collection - İşlemler
+    match /transactions/{transactionId} {
+      allow read, write: if isAuthenticated() && (
+        isOwner() || isResourceOwnerOrCreator(resource)
+      );
+      allow create: if isAuthenticated();
+    }
+
+    // Expenses collection - Giderler
+    match /expenses/{expenseId} {
+      allow read, write: if isAuthenticated() && (
+        isOwner() || isResourceOwnerOrCreator(resource)
+      );
+      allow create: if isAuthenticated();
+    }
+
+    // Notes collection - Notlar
+    match /notes/{noteId} {
+      allow read, write: if isAuthenticated() && (
+        isOwner() || isResourceOwner(resource)
+      );
+      allow create: if isAuthenticated();
+    }
+
+    // Services collection - Hizmetler (eğer varsa)
+    match /services/{serviceId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner();
+    }
+
+    // Settings collection - Ayarlar (sadece owner)
+    match /settings/{settingId} {
+      allow read, write: if isOwner();
+    }
+
+    // Reports collection - Raporlar (sadece owner)
+    match /reports/{reportId} {
+      allow read, write: if isOwner();
+    }
+
+    // Default deny rule
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+} 

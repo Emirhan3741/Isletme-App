@@ -1,0 +1,65 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "randevu-takip-app",
+          "appId": "1:308323114774:android:42013039b587f7d8cbba37",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "randevu-takip-app",
+          "configurations": {
+            "android": "1:308323114774:android:42013039b587f7d8cbba37",
+            "ios": "1:308323114774:ios:31565af9e265f749cbba37",
+            "macos": "1:308323114774:ios:31565af9e265f749cbba37",
+            "web": "1:308323114774:web:cb0d152574c2952dcbba37",
+            "windows": "1:308323114774:web:0834679bf5c9764ccbba37"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(js|css|woff2|woff|ttf|eot)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=31536000"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(png|jpg|jpeg|gif|svg|ico)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=86400"
+          }
+        ]
+      }
+    ],
+    "cleanUrls": true,
+    "trailingSlash": false
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}

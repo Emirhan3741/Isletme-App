@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "308323114774",
+    "project_id": "randevu-takip-app",
+    "storage_bucket": "randevu-takip-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:308323114774:android:42013039b587f7d8cbba37",
+        "android_client_info": {
+          "package_name": "com.example.randevu_erp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA8LKl-amplgqdlh6JKVT87wSSlQcAGCIg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:308323114774:android:c828813832270503cbba37",
+        "android_client_info": {
+          "package_name": "com.randevu.plus"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA8LKl-amplgqdlh6JKVT87wSSlQcAGCIg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

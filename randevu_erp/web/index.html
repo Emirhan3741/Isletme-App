@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Modern İşletme Yönetim Sistemi - Randevu, Müşteri, Finansal Takip ve Raporlama">
+  <meta name="keywords" content="randevu sistemi, işletme yönetimi, ERP, müşteri takip, finansal yönetim">
+  <meta name="author" content="Randevu ERP">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="Randevu ERP - İşletme Yönetim Sistemi">
+  <meta property="og:description" content="Modern İşletme Yönetim Sistemi - Randevu, Müşteri, Finansal Takip">
+  <meta property="og:image" content="icons/Icon-512.png">
+  <meta property="og:url" content="https://randevu-erp.web.app">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="tr_TR">
+  
+  <!-- Twitter Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Randevu ERP - İşletme Yönetim Sistemi">
+  <meta name="twitter:description" content="Modern İşletme Yönetim Sistemi">
+  <meta name="twitter:image" content="icons/Icon-512.png">
+
+  <!-- PWA Meta Tags -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Randevu ERP">
+  <meta name="theme-color" content="#2196F3">
+  <meta name="msapplication-TileColor" content="#2196F3">
+  <meta name="msapplication-navbutton-color" content="#2196F3">
+  
+  <!-- Icons -->
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/Icon-512.png">
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="shortcut icon" href="favicon.png"/>
+
+  <title>Randevu ERP - İşletme Yönetim Sistemi</title>
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Preload critical resources -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <!-- Loading styles -->
+  <style>
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #2196F3 0%, #21CBF3 100%);
+      color: white;
+      font-family: 'Roboto', sans-serif;
+    }
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loading-text {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: 300;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div class="loading" id="loading">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Randevu ERP Yükleniyor...</div>
+  </div>
+
+  <!-- Flutter App -->
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var loadingElement = document.getElementById('loading');
+      if (loadingElement) {
+        loadingElement.remove();
+      }
+    });
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+  
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('flutter-first-frame', function () {
+        navigator.serviceWorker.register('flutter_service_worker.js');
+      });
+    }
+  </script>
+</body>
+</html>
