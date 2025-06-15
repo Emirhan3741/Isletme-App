@@ -5,7 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'screens/auth_wrapper.dart';
-import 'services/notification_service.dart';
+import '../lib/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
