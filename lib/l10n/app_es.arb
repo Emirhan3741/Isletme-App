@@ -1,0 +1,159 @@
+{
+  "@@locale": "es",
+  "@@context": "Locapo ERP System - Spanish Translations",
+  
+  "appName": "Locapo ERP",
+  "@appName": {
+    "description": "Nombre de la aplicación"
+  },
+  
+  "welcome": "Bienvenido",
+  "@welcome": {
+    "description": "Mensaje de bienvenida"
+  },
+  
+  "login": "Iniciar Sesión",
+  "@login": {
+    "description": "Botón de inicio de sesión"
+  },
+  
+  "logout": "Cerrar Sesión",
+  "@logout": {
+    "description": "Botón de cerrar sesión"
+  },
+  
+  "email": "Correo Electrónico",
+  "@email": {
+    "description": "Campo de correo electrónico"
+  },
+  
+  "password": "Contraseña",
+  "@password": {
+    "description": "Campo de contraseña"
+  },
+  
+  "register": "Registrarse",
+  "@register": {
+    "description": "Botón de registro"
+  },
+  
+  "name": "Nombre",
+  "@name": {
+    "description": "Campo de nombre"
+  },
+  
+  "loading": "Cargando...",
+  "@loading": {
+    "description": "Mensaje de carga"
+  },
+  
+  "error": "Error",
+  "@error": {
+    "description": "Título de error general"
+  },
+  
+  "success": "Éxito",
+  "@success": {
+    "description": "Mensaje de éxito"
+  },
+  
+  "cancel": "Cancelar",
+  "@cancel": {
+    "description": "Botón cancelar"
+  },
+  
+  "save": "Guardar",
+  "@save": {
+    "description": "Botón guardar"
+  },
+  
+  "delete": "Eliminar",
+  "@delete": {
+    "description": "Botón eliminar"
+  },
+  
+  "edit": "Editar",
+  "@edit": {
+    "description": "Botón editar"
+  },
+  
+  "dashboard": "Panel de Control",
+  "@dashboard": {
+    "description": "Página del panel de control"
+  },
+  
+  "appointments": "Citas",
+  "@appointments": {
+    "description": "Página de citas"
+  },
+  
+  "customers": "Clientes",
+  "@customers": {
+    "description": "Página de clientes"
+  },
+  
+  "documents": "Documentos",
+  "@documents": {
+    "description": "Página de documentos"
+  },
+  
+  "settings": "Configuración",
+  "@settings": {
+    "description": "Página de configuración"
+  },
+  
+  "sector": "Sector",
+  "@sector": {
+    "description": "Selección de sector"
+  },
+  
+  "selectSector": "Seleccionar Sector",
+  "@selectSector": {
+    "description": "Botón seleccionar sector"
+  },
+  
+  "pleaseSelectSectorOrContactAdmin": "Por favor seleccione su sector o contacte al administrador.",
+  "@pleaseSelectSectorOrContactAdmin": {
+    "description": "Mensaje de advertencia de selección de sector"
+  },
+  
+  "back": "Atrás",
+  "@back": {
+    "description": "Botón atrás"
+  },
+  
+  "selectLanguage": "Seleccionar Idioma",
+  "@selectLanguage": {
+    "description": "Título de selección de idioma"
+  },
+  
+  "turkish": "Turco",
+  "@turkish": {
+    "description": "Opción de idioma turco"
+  },
+  
+  "english": "Inglés",
+  "@english": {
+    "description": "Opción de idioma inglés"
+  },
+  
+  "german": "Alemán",
+  "@german": {
+    "description": "Opción de idioma alemán"
+  },
+  
+  "spanish": "Español",
+  "@spanish": {
+    "description": "Opción de idioma español"
+  },
+  
+  "french": "Francés",
+  "@french": {
+    "description": "Opción de idioma francés"
+  },
+  
+  "writeMessage": "Escribe un mensaje...",
+  "@writeMessage": {
+    "description": "Marcador de posición de entrada de mensaje de chat de IA"
+  }
+}

@@ -1,149 +1,162 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-enum ExpenseCategory {
-  rent,
-  electricity,
-  water,
-  naturalGas,
-  phone,
-  internet,
-  salary,
-  material,
-  cleaning,
-  advertising,
-  tax,
-  insurance,
-  fuel,
-  food,
-  education,
-  maintenance,
-  other,
-}
-
-extension ExpenseCategoryX on ExpenseCategory {
-  String get name => toString().split('.').last;
-  String get displayName {
-    switch (this) {
-      case ExpenseCategory.rent:
-        return 'Rent';
-      case ExpenseCategory.electricity:
-        return 'Electricity';
-      case ExpenseCategory.water:
-        return 'Water';
-      case ExpenseCategory.naturalGas:
-        return 'Natural Gas';
-      case ExpenseCategory.phone:
-        return 'Phone';
-      case ExpenseCategory.internet:
-        return 'Internet';
-      case ExpenseCategory.salary:
-        return 'Salary';
-      case ExpenseCategory.material:
-        return 'Material';
-      case ExpenseCategory.cleaning:
-        return 'Cleaning';
-      case ExpenseCategory.advertising:
-        return 'Advertising';
-      case ExpenseCategory.tax:
-        return 'Tax';
-      case ExpenseCategory.insurance:
-        return 'Insurance';
-      case ExpenseCategory.fuel:
-        return 'Fuel';
-      case ExpenseCategory.food:
-        return 'Food';
-      case ExpenseCategory.education:
-        return 'Education';
-      case ExpenseCategory.maintenance:
-        return 'Maintenance';
-      case ExpenseCategory.other:
-        return 'Other';
-    }
-  }
-}
-
-ExpenseCategory expenseCategoryFromString(String value) {
-  return ExpenseCategory.values.firstWhere(
-    (e) => e.name == value,
-    orElse: () => ExpenseCategory.other,
-  );
-}
-
-enum PaymentMethod {
-  cash,
-  credit,
-  transfer,
-}
-
-extension PaymentMethodExtension on PaymentMethod {
-  String get displayName {
-    switch (this) {
-      case PaymentMethod.cash:
-        return 'Cash';
-      case PaymentMethod.credit:
-        return 'Credit';
-      case PaymentMethod.transfer:
-        return 'Transfer';
-    }
-  }
-}
+import 'package:flutter/material.dart';
 
 class ExpenseModel {
-  final String id;
+  String? id;
+  final String userId;
+  final String title;
+  final String category;
   final double amount;
-  final ExpenseCategory category;
+  final DateTime date;
+  final bool isRecurring;
+  final String description;
   final DateTime createdAt;
+  final DateTime? updatedAt;
+  bool isPaid;
+  DateTime? paymentDate;
+  String priority;
 
   ExpenseModel({
-    required this.id,
-    required this.amount,
+    this.id,
+    required this.userId,
+    required this.title,
     required this.category,
+    required this.amount,
+    required this.date,
+    this.isRecurring = false,
+    this.description = '',
     required this.createdAt,
+    this.updatedAt,
+    this.isPaid = false,
+    this.paymentDate,
+    this.priority = 'medium',
   });
 
-  factory ExpenseModel.fromMap(Map<String, dynamic> map, String id) {
-    double parseAmount(dynamic value) {
-      if (value == null) return 0.0;
-      if (value is double) return value;
-      if (value is int) return value.toDouble();
-      if (value is String) {
-        return double.tryParse(value.replaceAll(',', '.')) ?? 0.0;
-      }
-      return 0.0;
-    }
+  factory ExpenseModel.fromMap(Map<String, dynamic> map) {
     return ExpenseModel(
-      id: id,
-      amount: parseAmount(map['amount']),
-      category: map['category'] is String
-          ? expenseCategoryFromString(map['category'])
-          : ExpenseCategory.other,
+      id: map['id'],
+      userId: map['userId'] ?? '',
+      title: map['title'] ?? '',
+      category: map['category'] ?? 'Diğer',
+      amount: (map['amount'] ?? 0.0).toDouble(),
+      date: map['date'] is Timestamp
+          ? (map['date'] as Timestamp).toDate()
+          : DateTime.parse(map['date']),
+      isRecurring: map['isRecurring'] ?? false,
+      description: map['description'] ?? '',
       createdAt: map['createdAt'] is Timestamp
           ? (map['createdAt'] as Timestamp).toDate()
-          : DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
+          : DateTime.parse(map['createdAt']),
+      updatedAt: map['updatedAt'] != null
+          ? (map['updatedAt'] is Timestamp
+              ? (map['updatedAt'] as Timestamp).toDate()
+              : DateTime.parse(map['updatedAt']))
+          : null,
+      isPaid: map['isPaid'] ?? false,
+      paymentDate: map['paymentDate'] != null
+          ? (map['paymentDate'] is Timestamp
+              ? (map['paymentDate'] as Timestamp).toDate()
+              : DateTime.parse(map['paymentDate']))
+          : null,
+      priority: map['priority'] ?? 'medium',
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
+      'userId': userId,
+      'title': title,
+      'category': category,
       'amount': amount,
-      'category': category.name,
-      'createdAt': createdAt,
+      'date': Timestamp.fromDate(date),
+      'isRecurring': isRecurring,
+      'description': description,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
+      'isPaid': isPaid,
+      'paymentDate':
+          paymentDate != null ? Timestamp.fromDate(paymentDate!) : null,
+      'priority': priority,
     };
   }
 
   ExpenseModel copyWith({
     String? id,
+    String? userId,
+    String? title,
+    String? category,
     double? amount,
-    ExpenseCategory? category,
+    DateTime? date,
+    bool? isRecurring,
+    String? description,
     DateTime? createdAt,
+    DateTime? updatedAt,
+    bool? isPaid,
+    DateTime? paymentDate,
+    String? priority,
   }) {
     return ExpenseModel(
       id: id ?? this.id,
-      amount: amount ?? this.amount,
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
       category: category ?? this.category,
+      amount: amount ?? this.amount,
+      date: date ?? this.date,
+      isRecurring: isRecurring ?? this.isRecurring,
+      description: description ?? this.description,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isPaid: isPaid ?? this.isPaid,
+      paymentDate: paymentDate ?? this.paymentDate,
+      priority: priority ?? this.priority,
     );
+  }
+
+  // Kategori rengi
+  Color getCategoryColor() {
+    switch (category) {
+      case 'Kira':
+        return Colors.purple;
+      case 'Maaş':
+        return Colors.blue;
+      case 'Malzeme':
+        return Colors.orange;
+      case 'Pazarlama':
+        return Colors.green;
+      case 'Faturalar':
+        return Colors.red;
+      case 'Bakım':
+        return Colors.teal;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  // Kategori ikonu
+  IconData getCategoryIcon() {
+    switch (category) {
+      case 'Kira':
+        return Icons.home_outlined;
+      case 'Maaş':
+        return Icons.people_outlined;
+      case 'Malzeme':
+        return Icons.inventory_outlined;
+      case 'Pazarlama':
+        return Icons.campaign_outlined;
+      case 'Faturalar':
+        return Icons.receipt_long_outlined;
+      case 'Bakım':
+        return Icons.build_outlined;
+      default:
+        return Icons.money_off_outlined;
+    }
+  }
+
+  @override
+  String toString() {
+    return 'ExpenseModel{id: $id, title: $title, category: $category, amount: $amount, isRecurring: $isRecurring}';
   }
 }
 
-// Cleaned for Web Build by Cursor
+// Refactored by Cursor

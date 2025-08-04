@@ -1,62 +1,65 @@
 // CodeRabbit analyze fix: Dosya düzenlendi
-import 'package:firebase_auth/firebase_auth.dart';
+// AuthService sadeleştirildi - AuthProvider'da bu işlevler zaten var
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import '../models/user_model.dart';
+import 'google_auth_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  // Kullanıcı giriş yap
-  Future<User?> signIn(String email, String password) async {
-    final credential = await _auth.signInWithEmailAndPassword(email: email, password: password);
-    return credential.user;
-  }
-
-  // Kullanıcı çıkış yap
-  Future<void> signOut() async {
-    await _auth.signOut();
-  }
+  final GoogleAuthService _googleAuthService = GoogleAuthService();
 
   // Şu anki kullanıcıyı getir
   User? get currentUser => _auth.currentUser;
 
-  Future<String?> registerWithEmail({
-    required String email,
-    required String password,
-    required String displayName,
-    required UserRole role,
-  }) async {
+  // Kullanıcı auth durumunu dinle
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  // Google ile giriş yap
+  Future<UserCredential?> signInWithGoogle() async {
+    return await _googleAuthService.signInWithGoogle();
+  }
+
+  // Google çıkış
+  Future<void> signOutFromGoogle() async {
+    await _googleAuthService.signOutFromGoogle();
+  }
+
+  // Kullanıcının Google ile giriş yapmış olup olmadığını kontrol et
+  bool isSignedInWithGoogle() {
+    return _googleAuthService.isSignedInWithGoogle();
+  }
+
+  // Kullanıcının sektör seçimi yapıp yapmadığını kontrol et
+  Future<bool> hasUserSelectedSector() async {
+    return await _googleAuthService.hasUserSelectedSector();
+  }
+
+  // Kullanıcının sektörünü güncelle
+  Future<void> updateUserSector(String sector) async {
+    await _googleAuthService.updateUserSector(sector);
+  }
+
+  // Kullanıcı bilgilerini güncelle (UserService ile duplikasyon önlendi)
+  Future<void> updateUserData(UserModel user) async {
     try {
-      final credential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-      final user = credential.user;
-      if (user == null) {
-        return 'Registration failed. Please try again.';
-      }
-      UserModel userModel = UserModel(
-        id: user.uid,
-        name: displayName ?? '',
-        email: email,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      await _firestore.collection('users').doc(user.uid).set(userModel.toMap());
-      await user.updateDisplayName(displayName);
-      return null; // Success
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'email-already-in-use') {
-        return 'This email is already in use.';
-      } else if (e.code == 'weak-password') {
-        return 'Password is too weak.';
-      } else if (e.code == 'invalid-email') {
-        return 'Invalid email address.';
-      } else {
-        return 'Registration failed: ${e.message}';
-      }
+      await _firestore.collection('users').doc(user.id).update(user.toMap());
     } catch (e) {
-      return 'An unexpected error occurred: $e';
+      rethrow;
+    }
+  }
+
+  // Kullanıcı silme (admin işlemi)
+  Future<void> deleteUser(String userId) async {
+    try {
+      await _firestore.collection('users').doc(userId).delete();
+    } catch (e) {
+      rethrow;
     }
   }
 }
- 
-// Cleaned for Web Build by Cursor 
+
+// Cleaned for Web Build by Cursor

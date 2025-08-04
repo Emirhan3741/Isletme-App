@@ -2,9 +2,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
+    // ⚠️ GELİŞTİRME ORTAMI İÇİN GEÇİCİ KURAL - ÜRETİMDE DEĞİŞTİRİLMELİ
+    match /{document=**} {
+      allow read, write: if true;
+    }
+    
     // Kullanıcı rolü kontrol fonksiyonu
     function isOwner() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rol == 'owner';
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner';
     }
     
     function isAuthenticated() {
@@ -12,21 +17,24 @@ service cloud.firestore {
     }
     
     function isResourceOwner(resource) {
-      return request.auth.uid == resource.data.kullaniciId;
+      return request.auth.uid == resource.data.userId;
     }
     
     function isResourceOwnerOrCreator(resource) {
-      return request.auth.uid == resource.data.kullaniciId || 
-             request.auth.uid == resource.data.ekleyenKullaniciId;
+      return request.auth.uid == resource.data.userId || 
+             request.auth.uid == resource.data.createdBy;
     }
 
     // Users collection - Kullanıcı profilleri
     match /users/{userId} {
-      allow read, write: if request.auth.uid == userId;
-      allow read: if isOwner(); // Owner tüm kullanıcıları görebilir
-      allow create: if isOwner(); // Sadece owner yeni kullanıcı oluşturabilir
-      allow update: if isOwner() || request.auth.uid == userId;
-      allow delete: if isOwner() && request.auth.uid != userId; // Kendi hesabını silemez
+      // Kayıt sırasında kendi hesabını oluşturabilir
+      allow create: if request.auth.uid == userId;
+      // Kendi hesabını okuyabilir ve güncelleyebilir
+      allow read, update: if request.auth.uid == userId;
+      // Owner tüm kullanıcıları görebilir ve yönetebilir
+      allow read, create, update: if isAuthenticated() && isOwner();
+      // Sadece owner başka kullanıcıları silebilir (kendi hesabını değil)
+      allow delete: if isAuthenticated() && isOwner() && request.auth.uid != userId;
     }
 
     // Customers collection - Müşteriler
@@ -41,8 +49,8 @@ service cloud.firestore {
     match /appointments/{appointmentId} {
       allow read, write: if isAuthenticated() && (
         isOwner() || 
-        request.auth.uid == resource.data.calisanId ||
-        request.auth.uid == resource.data.ekleyenKullaniciId
+        request.auth.uid == resource.data.employeeId ||
+        request.auth.uid == resource.data.createdBy
       );
       allow create: if isAuthenticated();
     }
@@ -74,17 +82,17 @@ service cloud.firestore {
     // Services collection - Hizmetler (eğer varsa)
     match /services/{serviceId} {
       allow read: if isAuthenticated();
-      allow write: if isOwner();
+      allow write: if isAuthenticated() && isOwner();
     }
 
     // Settings collection - Ayarlar (sadece owner)
     match /settings/{settingId} {
-      allow read, write: if isOwner();
+      allow read, write: if isAuthenticated() && isOwner();
     }
 
     // Reports collection - Raporlar (sadece owner)
     match /reports/{reportId} {
-      allow read, write: if isOwner();
+      allow read, write: if isAuthenticated() && isOwner();
     }
 
     // Default deny rule

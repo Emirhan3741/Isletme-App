@@ -1,5 +1,7 @@
+// Refactored by Cursor
+
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+
 import '../../models/expense_model.dart';
 import '../../services/expense_service.dart';
 import 'add_edit_expense_page.dart';
@@ -25,8 +27,7 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
   List<ExpenseModel> _filterExpenses(List<ExpenseModel> expenses) {
     if (_searchQuery.isEmpty) return expenses;
     return expenses.where((expense) {
-      return expense.category.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-             expense.amount.toString().contains(_searchQuery);
+      return expense.amount.toString().contains(_searchQuery);
     }).toList();
   }
 
@@ -45,9 +46,13 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
             onPressed: () async {
               final result = await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const AddEditExpensePage()),
+                MaterialPageRoute(
+                  builder: (context) => const AddEditExpensePage(),
+                ),
               );
-              if (result == true) _refreshExpenses();
+              if (result == true) {
+                setState(() {});
+              }
             },
           ),
         ],
@@ -58,60 +63,78 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
             padding: const EdgeInsets.all(16),
             child: TextField(
               controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Kategori veya tutar ara...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+              decoration: const InputDecoration(
+                labelText: 'Ara',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
               ),
-              onChanged: (value) => setState(() => _searchQuery = value),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
             ),
           ),
           Expanded(
-            child: FutureBuilder<List<ExpenseModel>>(
-              future: _expenseService.getExpenses(),
+            child: StreamBuilder<List<ExpenseModel>>(
+              stream: _expenseService.getExpensesStream(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('Kayıtlı gider yok.'));
+
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text('Hata: ${snapshot.error}'),
+                  );
                 }
-                final expenses = _filterExpenses(snapshot.data!);
+
+                final expenses = _filterExpenses(snapshot.data ?? []);
+
                 if (expenses.isEmpty) {
-                  return const Center(child: Text('Aramanıza uygun gider bulunamadı.'));
+                  return const Center(
+                    child: Text('Gider bulunamadı'),
+                  );
                 }
-                return ListView.separated(
-                  itemCount: expenses.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, i) {
-                    final expense = expenses[i];
-                    return ListTile(
-                      leading: const CircleAvatar(child: Icon(Icons.money)),
-                      title: Text('${expense.amount.toStringAsFixed(2)} ₺'),
-                      subtitle: Text(expense.category.name),
-                      trailing: Text(DateFormat('dd.MM.yyyy').format(expense.createdAt)),
-                      onTap: () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => AddEditExpensePage(expense: expense),
+
+                return RefreshIndicator(
+                  onRefresh: _refreshExpenses,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: expenses.length,
+                    itemBuilder: (context, index) {
+                      final expense = expenses[index];
+                      return Card(
+                        child: ListTile(
+                          leading: const Icon(Icons.receipt),
+                          title: Text(
+                            expense.amount.toString(),
+                            style: Theme.of(context).textTheme.titleMedium,
                           ),
-                        );
-                        if (result == true) _refreshExpenses();
-                      },
-                    );
-                  },
+                          subtitle: Text(
+                            expense.createdAt.toString(),
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AddEditExpensePage(
+                                    expense: expense,
+                                  ),
+                                ),
+                              );
+                              if (result == true) {
+                                setState(() {});
+                              }
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 );
               },
             ),
@@ -121,4 +144,3 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
     );
   }
 }
-// Cleaned for Web Build by Cursor

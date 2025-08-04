@@ -1,0 +1,159 @@
+{
+  "@@locale": "fr",
+  "@@context": "Locapo ERP System - French Translations",
+  
+  "appName": "Locapo ERP",
+  "@appName": {
+    "description": "Nom de l'application"
+  },
+  
+  "welcome": "Bienvenue",
+  "@welcome": {
+    "description": "Message de bienvenue"
+  },
+  
+  "login": "Se Connecter",
+  "@login": {
+    "description": "Bouton de connexion"
+  },
+  
+  "logout": "Se Déconnecter",
+  "@logout": {
+    "description": "Bouton de déconnexion"
+  },
+  
+  "email": "Email",
+  "@email": {
+    "description": "Champ email"
+  },
+  
+  "password": "Mot de Passe",
+  "@password": {
+    "description": "Champ mot de passe"
+  },
+  
+  "register": "S'inscrire",
+  "@register": {
+    "description": "Bouton d'inscription"
+  },
+  
+  "name": "Nom",
+  "@name": {
+    "description": "Champ nom"
+  },
+  
+  "loading": "Chargement...",
+  "@loading": {
+    "description": "Message de chargement"
+  },
+  
+  "error": "Erreur",
+  "@error": {
+    "description": "Titre d'erreur général"
+  },
+  
+  "success": "Succès",
+  "@success": {
+    "description": "Message de succès"
+  },
+  
+  "cancel": "Annuler",
+  "@cancel": {
+    "description": "Bouton annuler"
+  },
+  
+  "save": "Enregistrer",
+  "@save": {
+    "description": "Bouton enregistrer"
+  },
+  
+  "delete": "Supprimer",
+  "@delete": {
+    "description": "Bouton supprimer"
+  },
+  
+  "edit": "Modifier",
+  "@edit": {
+    "description": "Bouton modifier"
+  },
+  
+  "dashboard": "Tableau de Bord",
+  "@dashboard": {
+    "description": "Page du tableau de bord"
+  },
+  
+  "appointments": "Rendez-vous",
+  "@appointments": {
+    "description": "Page des rendez-vous"
+  },
+  
+  "customers": "Clients",
+  "@customers": {
+    "description": "Page des clients"
+  },
+  
+  "documents": "Documents",
+  "@documents": {
+    "description": "Page des documents"
+  },
+  
+  "settings": "Paramètres",
+  "@settings": {
+    "description": "Page des paramètres"
+  },
+  
+  "sector": "Secteur",
+  "@sector": {
+    "description": "Sélection de secteur"
+  },
+  
+  "selectSector": "Sélectionner Secteur",
+  "@selectSector": {
+    "description": "Bouton sélectionner secteur"
+  },
+  
+  "pleaseSelectSectorOrContactAdmin": "Veuillez sélectionner votre secteur ou contacter l'administrateur.",
+  "@pleaseSelectSectorOrContactAdmin": {
+    "description": "Message d'avertissement de sélection de secteur"
+  },
+  
+  "back": "Retour",
+  "@back": {
+    "description": "Bouton retour"
+  },
+  
+  "selectLanguage": "Sélectionner la Langue",
+  "@selectLanguage": {
+    "description": "Titre de sélection de langue"
+  },
+  
+  "turkish": "Turc",
+  "@turkish": {
+    "description": "Option de langue turque"
+  },
+  
+  "english": "Anglais",
+  "@english": {
+    "description": "Option de langue anglaise"
+  },
+  
+  "german": "Allemand",
+  "@german": {
+    "description": "Option de langue allemande"
+  },
+  
+  "spanish": "Espagnol",
+  "@spanish": {
+    "description": "Option de langue espagnole"
+  },
+  
+  "french": "Français",
+  "@french": {
+    "description": "Option de langue française"
+  },
+  
+  "writeMessage": "Écrire un message...",
+  "@writeMessage": {
+    "description": "Espace réservé pour la saisie de message de chat IA"
+  }
+}

@@ -24,7 +24,8 @@ Future<void> seedInitialData() async {
   });
 
   // 3. Appointment
-  final appointmentRef = firestore.collection('appointments').doc('demoAppointment');
+  final appointmentRef =
+      firestore.collection('appointments').doc('demoAppointment');
   await appointmentRef.set({
     'id': 'demoAppointment',
     'customerId': 'demoCustomer',
@@ -36,7 +37,8 @@ Future<void> seedInitialData() async {
   });
 
   // 4. Transaction
-  final transactionRef = firestore.collection('transactions').doc('demoTransaction');
+  final transactionRef =
+      firestore.collection('transactions').doc('demoTransaction');
   await transactionRef.set({
     'id': 'demoTransaction',
     'amount': 100.0,
@@ -63,4 +65,4 @@ Future<void> seedInitialData() async {
     'createdAt': DateTime.now(),
     'updatedAt': DateTime.now(),
   });
-} 
+}

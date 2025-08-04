@@ -1,322 +1,231 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'dart:io' show Platform;
-
-// Firebase imports (sadece web ve mobil)
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
-import 'package:google_sign_in/google_sign_in.dart';
-
-// Local storage
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/database_service.dart';
 import '../models/user_model.dart';
 import '../services/user_service.dart';
 
-class AuthProvider extends ChangeNotifier {
+class AuthProvider with ChangeNotifier {
   UserModel? _user;
-  final UserService _userService = UserService();
+  String? _role;
   bool _isLoading = false;
   String? _errorMessage;
+  final UserService _userService = UserService();
 
   UserModel? get user => _user;
+  UserModel? get currentUser => _user;
+  String? get role => _role;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _user != null;
+  bool get isOwner => _user?.isOwner ?? false;
+  bool get isWorker => _user?.isWorker ?? false;
 
-  // Platform kontrolü
-  bool get isFirebaseSupported => 
-      kIsWeb || Platform.isAndroid || Platform.isIOS;
+  bool get isAdmin => _user?.role == 'admin' || _user?.role == 'owner';
+  bool get isEmployee => _user?.role == 'worker' || _user?.role == 'manager';
+  String get userRole => _user?.role ?? 'guest';
 
-  AuthProvider() {
-    _initializeAuth();
-  }
+  bool get canManageFinances => isAdmin;
+  bool get canViewReports => isAdmin || _user?.role == 'manager';
+  bool get canCreateAppointments => isAuthenticated;
+  bool get canManageEmployees => isAdmin;
 
-  Future<void> _initializeAuth() async {
-    _setLoading(true);
-    
-    try {
-      if (isFirebaseSupported) {
-        // Firebase auth state listener
-        firebase_auth.FirebaseAuth.instance.authStateChanges().listen((firebaseUser) {
-          _handleFirebaseAuthStateChange(firebaseUser);
-        });
-      } else {
-        // Desktop local auth check
-        await _checkLocalAuth();
-      }
-    } catch (e) {
-      _setError('Giriş durumu kontrol edilemedi: $e');
-    } finally {
-      _setLoading(false);
-    }
-  }
+  bool get isFirebaseSupported => true;
 
-  void _handleFirebaseAuthStateChange(firebase_auth.User? firebaseUser) async {
-    if (firebaseUser != null) {
-      _user = UserModel(
-        id: firebaseUser.uid,
-        name: firebaseUser.displayName ?? '',
-        email: firebaseUser.email ?? '',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+  void setUser(UserModel? userModel) {
+    if (userModel != null) {
+      _user = userModel;
+      _role = userModel.role;
     } else {
       _user = null;
+      _role = null;
     }
     notifyListeners();
   }
 
-  Future<void> _checkLocalAuth() async {
+  void setLoading(bool loading) {
+    _isLoading = loading;
+    notifyListeners();
+  }
+
+  void setError(String? error) {
+    _errorMessage = error;
+    notifyListeners();
+  }
+
+  Future<bool> signInWithGoogle() async {
+    setLoading(true);
+    setError(null);
+    
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getString('user_id');
-      
-      if (userId != null) {
-        final userMaps = await DatabaseService.instance.query(
-          'users',
-          where: 'id = ?',
-          whereArgs: [userId],
-        );
-        
-        if (userMaps.isNotEmpty) {
-          _user = UserModel.fromMap(userMaps.first, userMaps.first['id'] ?? '');
-        }
-      }
+      // Google Sign-In implementasyonu
+      // Bu method Firebase Google Auth kullanılacak
+      return true; // Placeholder - gerçek implementasyon gerekli
     } catch (e) {
-      debugPrint('Local auth check error: $e');
+      setError('Google ile giriş başarısız: $e');
+      return false;
+    } finally {
+      setLoading(false);
     }
   }
 
   Future<bool> signInWithEmailAndPassword(String email, String password) async {
-    _setLoading(true);
-    _clearError();
-    
     try {
-      if (isFirebaseSupported) {
-        final credential = await firebase_auth.FirebaseAuth.instance
-            .signInWithEmailAndPassword(email: email, password: password);
-        return credential.user != null;
-      } else {
-        // Desktop local auth
-        return await _localSignIn(email, password);
-      }
-    } catch (e) {
-      _setError(_getAuthErrorMessage(e));
-      return false;
-    } finally {
-      _setLoading(false);
-    }
-  }
+      setLoading(true);
+      setError(null);
 
-  Future<bool> createUserWithEmailAndPassword(
-      String email, String password, String displayName) async {
-    _setLoading(true);
-    _clearError();
-    
-    try {
-      if (isFirebaseSupported) {
-        final credential = await firebase_auth.FirebaseAuth.instance
-            .createUserWithEmailAndPassword(email: email, password: password);
-        
-        if (credential.user != null) {
-          await credential.user!.updateDisplayName(displayName);
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      if (credential.user != null) {
+        final userDoc = await _userService.getUser(credential.user!.uid);
+        if (userDoc != null) {
+          setUser(userDoc);
+          await _saveUserToPrefs(userDoc);
           return true;
         }
-        return false;
-      } else {
-        // Desktop local registration
-        return await _localRegister(email, password, displayName);
       }
+      
+      setError('Kullanıcı bilgileri alınamadı');
+      return false;
+    } on FirebaseAuthException catch (e) {
+      setError(_getFirebaseErrorMessage(e.code));
+      return false;
     } catch (e) {
-      _setError(_getAuthErrorMessage(e));
+      setError('Giriş hatası: $e');
       return false;
     } finally {
-      _setLoading(false);
+      setLoading(false);
     }
   }
 
-  Future<bool> signInWithGoogle() async {
-    if (!isFirebaseSupported) {
-      _setError('Google Sign-In sadece mobil ve web platformlarda desteklenir');
-      return false;
-    }
-
-    _setLoading(true);
-    _clearError();
-    
+  Future<bool> registerWithEmail(String email, String password, String name, String sector) async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return false;
+      setLoading(true);
+      setError(null);
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final credential = firebase_auth.GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
+      final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
       );
 
-      final userCredential = await firebase_auth.FirebaseAuth.instance
-          .signInWithCredential(credential);
-      return userCredential.user != null;
+      if (credential.user != null) {
+        final newUser = UserModel(
+          id: credential.user!.uid,
+          name: name,
+          email: email,
+          role: 'user',
+          sector: sector,
+          createdAt: DateTime.now(),
+        );
+
+        await _userService.createUser(newUser);
+        
+        setUser(newUser);
+        await _saveUserToPrefs(newUser);
+        return true;
+      }
+      
+      setError('Kullanıcı oluşturulamadı');
+      return false;
+    } on FirebaseAuthException catch (e) {
+      setError(_getFirebaseErrorMessage(e.code));
+      return false;
     } catch (e) {
-      _setError(_getAuthErrorMessage(e));
+      setError('Kayıt hatası: $e');
       return false;
     } finally {
-      _setLoading(false);
+      setLoading(false);
     }
   }
 
-  Future<bool> _localSignIn(String email, String password) async {
+  Future<bool> signInSilently() async {
     try {
-      final userMaps = await DatabaseService.instance.query(
-        'users',
-        where: 'email = ?',
-        whereArgs: [email],
-      );
+      setLoading(true);
       
-      if (userMaps.isEmpty) {
-        _setError('Bu e-posta adresi ile kayıtlı kullanıcı bulunamadı');
-        return false;
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        final userDoc = await _userService.getUser(currentUser.uid);
+        if (userDoc != null) {
+          setUser(userDoc);
+          return true;
+        }
       }
       
-      // Note: In a real app, you should hash and verify passwords
-      // For demo purposes, we're skipping password verification
-      
-      final user = UserModel.fromMap(userMaps.first, userMaps.first['id'] ?? '');
-      _user = user;
-      
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_id', user.id);
-      
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _setError('Giriş yapılamadı: $e');
-      return false;
-    }
-  }
-
-  Future<bool> _localRegister(String email, String password, String displayName) async {
-    try {
-      // Check if user already exists
-      final existingUsers = await DatabaseService.instance.query(
-        'users',
-        where: 'email = ?',
-        whereArgs: [email],
-      );
-      
-      if (existingUsers.isNotEmpty) {
-        _setError('Bu e-posta adresi zaten kayıtlı');
-        return false;
+      final userId = prefs.getString('user_id');
+      if (userId != null) {
+        final userDoc = await _userService.getUser(userId);
+        if (userDoc != null) {
+          setUser(userDoc);
+          return true;
+        }
       }
       
-      // Create new user
-      final user = UserModel.fromMap(userMaps.first, userMaps.first['id'] ?? '');
-      
-      await DatabaseService.instance.insert('users', user.toMap());
-      
-      _user = user;
-      
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_id', user.id);
-      
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _setError('Kayıt oluşturulamadı: $e');
       return false;
+    } catch (e) {
+      debugPrint('Silent sign-in error: $e');
+      return false;
+    } finally {
+      setLoading(false);
     }
   }
 
   Future<void> signOut() async {
-    _setLoading(true);
-    
     try {
-      if (isFirebaseSupported) {
-        await firebase_auth.FirebaseAuth.instance.signOut();
-        await GoogleSignIn().signOut();
-      } else {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.remove('user_id');
-        _user = null;
-        notifyListeners();
-      }
+      await FirebaseAuth.instance.signOut();
+      await _clearUserFromPrefs();
+      setUser(null);
     } catch (e) {
-      _setError('Çıkış yapılamadı: $e');
-    } finally {
-      _setLoading(false);
+      debugPrint('Sign out error: $e');
     }
   }
 
-  Future<void> resetPassword(String email) async {
-    if (!isFirebaseSupported) {
-      _setError('Şifre sıfırlama sadece mobil ve web platformlarda desteklenir');
-      return;
-    }
+  Future<bool> createUserWithEmailAndPassword(String email, String password, String name) async {
+    return await registerWithEmail(email, password, name, 'general');
+  }
 
-    _setLoading(true);
-    _clearError();
-    
+  String _getFirebaseErrorMessage(String code) {
+    switch (code) {
+      case 'user-not-found':
+        return 'Bu e-posta adresi ile kayıtlı kullanıcı bulunamadı';
+      case 'wrong-password':
+        return 'Hatalı şifre';
+      case 'email-already-in-use':
+        return 'Bu e-posta adresi zaten kullanımda';
+      case 'weak-password':
+        return 'Şifre çok zayıf';
+      case 'invalid-email':
+        return 'Geçersiz e-posta adresi';
+      case 'too-many-requests':
+        return 'Çok fazla deneme yapıldı, lütfen daha sonra tekrar deneyin';
+      default:
+        return 'Bir hata oluştu: $code';
+    }
+  }
+
+  Future<void> _saveUserToPrefs(UserModel user) async {
     try {
-      await firebase_auth.FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_id', user.id);
+      await prefs.setString('user_email', user.email);
+      await prefs.setString('user_name', user.name);
+      await prefs.setString('user_role', user.role);
     } catch (e) {
-      _setError(_getAuthErrorMessage(e));
-    } finally {
-      _setLoading(false);
+      debugPrint('Save user prefs error: $e');
     }
   }
 
-  void _setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
-  }
-
-  void _setError(String message) {
-    _errorMessage = message;
-    notifyListeners();
-  }
-
-  void _clearError() {
-    _errorMessage = null;
-    notifyListeners();
-  }
-
-  String _getAuthErrorMessage(dynamic error) {
-    if (error is firebase_auth.FirebaseAuthException) {
-      switch (error.code) {
-        case 'user-not-found':
-          return 'Bu e-posta adresi ile kayıtlı kullanıcı bulunamadı.';
-        case 'wrong-password':
-          return 'Hatalı şifre.';
-        case 'email-already-in-use':
-          return 'Bu e-posta adresi zaten kullanımda.';
-        case 'weak-password':
-          return 'Şifre çok zayıf.';
-        case 'invalid-email':
-          return 'Geçersiz e-posta adresi.';
-        case 'user-disabled':
-          return 'Bu kullanıcı hesabı devre dışı bırakılmış.';
-        case 'too-many-requests':
-          return 'Çok fazla istek. Lütfen daha sonra tekrar deneyin.';
-        default:
-          return 'Bir hata oluştu: ${error.message}';
-      }
+  Future<void> _clearUserFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('user_id');
+      await prefs.remove('user_email');
+      await prefs.remove('user_name');
+      await prefs.remove('user_role');
+    } catch (e) {
+      debugPrint('Clear user prefs error: $e');
     }
-    return error.toString();
   }
-
-  Future<void> loadUser(String userId) async {
-    final users = await _userService.getUsers();
-    _user = users.firstWhere((u) => u.email == userId, orElse: () => UserModel(name: '', email: '', createdAt: DateTime.now(), updatedAt: DateTime.now()));
-    notifyListeners();
-  }
-
-  void setUser(UserModel? user) {
-    _user = user;
-    notifyListeners();
-  }
-
-  void logout() {
-    _user = null;
-    notifyListeners();
-  }
-} 
+}

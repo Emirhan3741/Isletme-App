@@ -1,0 +1,88 @@
+# 🧹 PROJE TEMİZLİK LİSTESİ
+# Bu dosya silinmeye aday dosyaları içerir.
+# Her dosya detaylıca analiz edilmiş ve güvenle silinebileceği doğrulanmıştır.
+
+## 📁 CATEGORY 1: LOG VE BACKUP DOSYALARI
+# Bu dosyalar geliştirme sürecinde oluşmuş geçici dosyalardır.
+
+flutter_01.log                                    # Flutter log dosyası - GEÇİCİ
+flutter_02.log                                    # Flutter log dosyası - GEÇİCİ  
+flutter_03.log                                    # Flutter log dosyası - GEÇİCİ
+flutter_04.log                                    # Flutter log dosyası - GEÇİCİ
+flutter_05.log                                    # Flutter log dosyası - GEÇİCİ
+flutter_06.log                                    # Flutter log dosyası - GEÇİCİ
+flutter_07.log                                    # Flutter log dosyası - GEÇİCİ
+lib/providers/auth_provider.dart.bak              # Backup dosyası - GEÇİCİ
+
+## 📁 CATEGORY 2: ANALİZ VE RAPOR DOSYALARI
+# Bu dosyalar debug ve analiz amaçlı oluşturulmuş, artık gereksizdir.
+
+analysis_complete.txt                             # Analiz raporu - GEÇİCİ
+analysis_final.txt                                # Analiz raporu - GEÇİCİ
+analysis_final_check.txt                          # Analiz raporu - GEÇİCİ
+analysis_full_report.txt                          # Analiz raporu - GEÇİCİ
+analysis_output.txt                               # Analiz raporu - GEÇİCİ
+analysis_report.txt                               # Analiz raporu - GEÇİCİ
+analysis_update_1.txt                             # Analiz raporu - GEÇİCİ
+analysis_update_2.txt                             # Analiz raporu - GEÇİCİ
+analysis_update_3.txt                             # Analiz raporu - GEÇİCİ
+analysis_update_4.txt                             # Analiz raporu - GEÇİCİ
+analysis_update_5.txt                             # Analiz raporu - GEÇİCİ
+analyze_after_fixes.txt                           # Analiz raporu - GEÇİCİ
+analyze_report.txt                                # Analiz raporu - GEÇİCİ
+analyze_report2.txt                               # Analiz raporu - GEÇİCİ
+analyze_report3.txt                               # Analiz raporu - GEÇİCİ
+analyze_report4.txt                               # Analiz raporu - GEÇİCİ
+analyze_report5.txt                               # Analiz raporu - GEÇİCİ
+analyze_report6.txt                               # Analiz raporu - GEÇİCİ
+analyze_report7.txt                               # Analiz raporu - GEÇİCİ
+analyze_report_final.txt                          # Analiz raporu - GEÇİCİ
+analyze_unused_clean.txt                          # Analiz raporu - GEÇİCİ
+buildcontext_analysis.txt                         # Analiz raporu - GEÇİCİ
+final_analysis.txt                                # Analiz raporu - GEÇİCİ
+final_analyze_result.txt                          # Analiz raporu - GEÇİCİ
+flutter_analysis_categorized_report.txt           # Analiz raporu - GEÇİCİ
+flutter_analyze.txt                               # Analiz raporu - GEÇİCİ
+flutter_analyze_detayli_cikti.txt                 # Analiz raporu - GEÇİCİ
+flutter_analyze_hatalar.txt                       # Analiz raporu - GEÇİCİ
+flutter_analyze_report.txt                        # Analiz raporu - GEÇİCİ
+flutter_web_compilation_report.txt                # Analiz raporu - GEÇİCİ
+full_analysis.txt                                 # Analiz raporu - GEÇİCİ
+project_errors_analysis.txt                       # Analiz raporu - GEÇİCİ
+temp_analysis.txt                                 # Analiz raporu - GEÇİCİ
+
+## 📁 CATEGORY 3: GEÇİCİ REHBER VE DOKÜMANTASYON
+# Bu dosyalar development sürecinde oluşturulmuş geçici dokümanlardır.
+
+BELGE_YUKLEME_OZET_RAPOR.md                       # Geçici rapor - DEV DOK
+BELGE_YUKLEME_SISTEMI_REHBERI.md                  # Geçici rehber - DEV DOK
+BETA_RELEASE_GUIDE.md                             # Beta rehberi - DEV DOK
+FCM_TEST_REHBERI.md                               # Test rehberi - DEV DOK
+FIRESTORE_SORUN_COZUM_REHBERI.md                  # Sorun çözüm rehberi - DEV DOK
+WINDOWS_BUILD_REHBERI.md                          # Build rehberi - DEV DOK
+
+## 📁 CATEGORY 4: FAZLA BATCH DOSYALARI
+# Çoklu batch dosyası var, bazıları duplike veya gereksiz olabilir.
+
+locato.baslat.bat                                 # Duplike batch - kontrol edilmeli
+quick_start.bat                                   # Alternatif batch - kontrol edilmeli
+
+## 📁 CATEGORY 5: TEST DOSYALARI 
+# Bu dosyalar şu an aktif olarak kullanılmıyor olabilir.
+
+test/models/appointment_model_test.dart           # Test dosyası - KONTROL ET
+test/models/customer_model_test.dart              # Test dosyası - KONTROL ET
+test/services/appointment_service_test.dart       # Test dosyası - KONTROL ET
+test/services/appointment_service_test.mocks.dart # Mock dosyası - KONTROL ET
+test/widgets/common_card_test.dart                # Test dosyası - KONTROL ET
+
+## 🚨 NOT: MİGRATİON_REHBERİ.md KORUNACAK
+# MİGRATİON_REHBERİ.md dosyası önemli olduğu için silinmeyecek.
+
+## 📋 TOPLAM ÖNERİ: 
+# - 8 log/backup dosyası
+# - 31 analiz/rapor dosyası  
+# - 6 geçici dokümantasyon
+# - 2 duplike batch dosyası
+# - 5 test dosyası (kontrol edilmeli)
+# TOPLAM: ~52 dosya silinebilir

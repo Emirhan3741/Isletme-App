@@ -1,0 +1,146 @@
+FLUTTER WEB DERLEME HATALARI - ÇÖZÜM REHBERİ
+==============================================
+
+TARİH: ${new Date().toLocaleDateString('tr-TR')}
+PROJE: Randevu ERP - Flutter Web Uygulaması
+
+1. FILE_PICKER PAKETİ SORUNLARI
+==============================
+
+Sorun: file_picker paketi pubspec.yaml'da yorumlandığı için import edilemiyor.
+
+Etkilenen Dosyalar:
+- lib/screens/real_estate/real_estate_documents_page.dart
+- lib/screens/clinic/clinic_documents_page.dart
+- lib/screens/clinic/clinic_profile_page.dart
+- lib/screens/education/education_documents_page.dart
+- lib/services/file_upload_service.dart
+
+Hatalar:
+- 'FilePickerResult' isn't a type
+- 'PlatformFile' isn't a type
+- The getter 'FilePicker' isn't defined
+- The getter 'FileType' isn't defined
+
+Çözüm:
+1. pubspec.yaml dosyasındaki file_picker: ^6.2.1 satırının yorumunu kaldır
+2. flutter pub get komutunu çalıştır
+3. Etkilenen dosyalarda import 'package:file_picker/file_picker.dart'; ekle
+
+2. NULL SAFETY SORUNLARI
+========================
+
+Dosya: lib/utils/error_handler.dart:192:23
+Hata: A non-null value must be returned since the return type 'bool' doesn't allow null.
+
+Çözüm:
+showRetryDialog fonksiyonunun sonunda return false; veya return true; ekle
+
+3. SYNTAX HATALARI
+==================
+
+Dosya: lib/services/file_upload_service.dart
+Sorun: FilePicker.platform.pickFiles() fonksiyonunda syntax hatası
+
+Hatalar:
+- Expected ';' after this
+- Expected an identifier
+- Unexpected token ','
+
+Çözüm:
+FilePicker çağrısını doğru syntax ile yeniden yaz:
+
+```dart
+final result = await FilePicker.platform.pickFiles(
+  type: FileType.any,
+  allowedExtensions: extensions,
+  allowMultiple: allowMultiple,
+  withData: true,
+);
+```
+
+4. TYPE SYSTEM HATALARI
+=======================
+
+Hata: InvalidType(<invalid>) - Unsupported operation
+Dosya: lib/screens/education/education_documents_page.dart
+
+Bu hata genellikle:
+- Import eksikliği
+- Type tanımlamalarındaki hatalar
+- Generic type parametrelerindeki sorunlar
+
+5. PROPERTY ACCESS HATALARI
+===========================
+
+Sorun: Map<String, dynamic> üzerinde .path ve .bytes property'lerine erişim
+
+Etkilenen Kodlar:
+- fileResult.file.path
+- fileResult.file.bytes
+
+Çözüm:
+PlatformFile tipini doğru kullan:
+```dart
+PlatformFile file = result.files.first;
+file.path  // yerine
+file.bytes // kullan
+```
+
+6. WEB PLATFORMU ÖZELLEŞTİRMELERİ
+=================================
+
+Web platformunda file_picker farklı davranır:
+- path property'si web'de null olabilir
+- bytes property'si kullanılmalı
+- kIsWeb kontrolü yapılmalı
+
+ÖNERİLEN ÇÖZÜM SIRASI:
+=====================
+
+1. ÖNCE: pubspec.yaml'daki file_picker yorumunu kaldır
+   ```yaml
+   file_picker: ^6.2.1  # Bu satırın yorumunu kaldır
+   ```
+
+2. SONRA: Bağımlılıkları yükle
+   ```bash
+   flutter clean
+   flutter pub get
+   ```
+
+3. ARDINDA: Import'ları ekle
+   Tüm etkilenen dosyalara:
+   ```dart
+   import 'package:file_picker/file_picker.dart';
+   ```
+
+4. SON OLARAK: Type hatalarını düzelt
+   - error_handler.dart'ta return statement ekle
+   - file_upload_service.dart'ta syntax düzelt
+   - Web uyumlu kod yaz
+
+ALTERNATIF ÇÖZÜM:
+================
+
+Eğer file_picker web'de sorun çıkarıyorsa:
+1. Web-only dosya seçimi için html package kullan
+2. Platform kontrolü ile farklı implementasyonlar yap:
+
+```dart
+import 'dart:io' if (dart.library.html) 'dart:html';
+
+if (kIsWeb) {
+  // Web için input[type=file] kullan
+} else {
+  // Mobil için file_picker kullan
+}
+```
+
+SONUÇ:
+======
+Ana sorun: file_picker paketinin devre dışı bırakılması
+Toplam Etkilenen Dosya: 5+
+Kritiklik: YÜKSEK - Uygulamanın derlenmesini engelliyor
+
+Bu dosyaları düzelttikten sonra proje web'de çalışacaktır. 

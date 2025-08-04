@@ -1,0 +1,163 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Yardımcı fonksiyonlar
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'owner'];
+    }
+    
+    function isOwnerOrAdmin(userId) {
+      return isOwner(userId) || isAdmin();
+    }
+    
+    function hasValidUserId() {
+      return request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Kullanıcılar koleksiyonu
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      allow read: if isAdmin();
+      allow create: if isAuthenticated() && hasValidUserId();
+    }
+    
+    // Belgeler koleksiyonu - Güvenli kullanıcı odaklı erişim
+    match /documents/{docId} {
+      allow read, write, delete: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+      
+      allow create: if isAuthenticated() && hasValidUserId();
+      
+      allow read: if isAdmin();
+      
+      allow update: if isAdmin() &&
+        request.writeFields.hasOnly(['adminComment', 'status', 'approvedBy', 'updatedAt']) &&
+        request.auth.uid != resource.data.userId;
+    }
+    
+    // Randevular koleksiyonu - Güvenli erişim
+    match /appointments/{appointmentId} {
+      allow read, write, delete: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+      
+      allow create: if isAuthenticated() && hasValidUserId();
+      
+      allow read, write: if isAdmin();
+    }
+    
+    // Müşteriler koleksiyonu
+    match /customers/{customerId} {
+      allow read, write, delete: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+      
+      allow create: if isAuthenticated() && hasValidUserId();
+      
+      allow read, write: if isAdmin();
+    }
+    
+    // Hizmetler koleksiyonu
+    match /services/{serviceId} {
+      allow read, write, delete: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+      
+      allow create: if isAuthenticated() && hasValidUserId();
+      
+      allow read, write: if isAdmin();
+    }
+    
+    // Personel koleksiyonu
+    match /staff/{staffId} {
+      allow read, write, delete: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+      
+      allow create: if isAuthenticated() && hasValidUserId();
+      
+      allow read, write: if isAdmin();
+    }
+    
+    // İşlemler koleksiyonu
+    match /transactions/{transactionId} {
+      allow read, write, delete: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+      
+      allow create: if isAuthenticated() && hasValidUserId();
+      
+      allow read: if isAdmin();
+    }
+    
+    // Giderler koleksiyonu
+    match /expenses/{expenseId} {
+      allow read, write, delete: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+      
+      allow create: if isAuthenticated() && hasValidUserId();
+      
+      allow read: if isAdmin();
+    }
+    
+    // Notlar koleksiyonu
+    match /notes/{noteId} {
+      allow read, write, delete: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+      
+      allow create: if isAuthenticated() && hasValidUserId();
+      
+      allow read: if isAdmin();
+    }
+    
+    // Raporlar koleksiyonu
+    match /reports/{reportId} {
+      allow read, write, delete: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+      
+      allow create: if isAuthenticated() && hasValidUserId();
+      
+      allow read: if isAdmin();
+    }
+    
+    // Ayarlar koleksiyonu
+    match /settings/{settingId} {
+      allow read, write: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+      
+      allow create: if isAuthenticated() && hasValidUserId();
+      
+      allow read, write: if isAdmin();
+    }
+    
+    // Audit logları - sadece okuma ve oluşturma
+    match /audit_logs/{logId} {
+      allow read: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+      
+      allow create: if isAuthenticated() && hasValidUserId();
+      
+      allow read: if isAdmin();
+    }
+    
+    // FCM token'ları
+    match /fcm_tokens/{tokenId} {
+      allow read, write: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+      
+      allow create: if isAuthenticated() && hasValidUserId();
+      
+      allow read: if isAdmin();
+    }
+    
+    // Varsayılan kural - Erişim reddedilir
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

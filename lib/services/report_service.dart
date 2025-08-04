@@ -1,11 +1,9 @@
 // CodeRabbit analyze fix: Dosya düzenlendi
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/transaction_model.dart';
-import '../models/expense_model.dart';
-import '../models/appointment_model.dart';
+
 import '../models/note_model.dart';
-import '../models/customer_model.dart';
 
 enum PaymentStatus { paid, debt }
 
@@ -38,20 +36,19 @@ class ReportService {
   // Kullanıcının rolünü kontrol et
   Future<bool> isOwner() async {
     if (currentUser == null) return false;
-    
+
     try {
       final userDoc = await _firestore
           .collection(_usersCollection)
           .doc(currentUser!.uid)
           .get();
-      
+
       if (userDoc.exists) {
         final userData = userDoc.data() as Map<String, dynamic>;
         return userData['role'] == 'owner';
       }
       return false;
     } catch (e) {
-      print('Rol kontrolü hatası: $e');
       return false;
     }
   }
@@ -87,7 +84,6 @@ class ReportService {
 
       return totalIncome;
     } catch (e) {
-      print('Bugünün geliri hesaplama hatası: $e');
       return 0.0;
     }
   }
@@ -104,7 +100,8 @@ class ReportService {
 
       Query query = _firestore
           .collection(_expensesCollection)
-          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
+          .where('date',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
           .where('date', isLessThan: Timestamp.fromDate(endOfMonth));
 
       // Worker sadece kendi giderlerini görebilir
@@ -122,7 +119,6 @@ class ReportService {
 
       return totalExpenses;
     } catch (e) {
-      print('Bu ayın gideri hesaplama hatası: $e');
       return 0.0;
     }
   }
@@ -152,7 +148,6 @@ class ReportService {
 
       return totalDebt;
     } catch (e) {
-      print('Toplam borç hesaplama hatası: $e');
       return 0.0;
     }
   }
@@ -169,7 +164,8 @@ class ReportService {
 
       Query query = _firestore
           .collection(_appointmentsCollection)
-          .where('startDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('startDate',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
           .where('startDate', isLessThan: Timestamp.fromDate(endOfDay));
 
       // Worker sadece kendi randevularını görebilir
@@ -180,7 +176,6 @@ class ReportService {
       final snapshot = await query.get();
       return snapshot.docs.length;
     } catch (e) {
-      print('Bugünkü randevu sayısı hatası: $e');
       return 0;
     }
   }
@@ -192,13 +187,17 @@ class ReportService {
     try {
       final bool userIsOwner = await isOwner();
       final DateTime now = DateTime.now();
-      final DateTime startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-      final DateTime startOfWeekMidnight = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
-      final DateTime endOfWeek = startOfWeekMidnight.add(const Duration(days: 7));
+      final DateTime startOfWeek =
+          now.subtract(Duration(days: now.weekday - 1));
+      final DateTime startOfWeekMidnight =
+          DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
+      final DateTime endOfWeek =
+          startOfWeekMidnight.add(const Duration(days: 7));
 
       Query query = _firestore
           .collection(_appointmentsCollection)
-          .where('startDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfWeekMidnight))
+          .where('startDate',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfWeekMidnight))
           .where('startDate', isLessThan: Timestamp.fromDate(endOfWeek));
 
       // Worker sadece kendi randevularını görebilir
@@ -209,7 +208,6 @@ class ReportService {
       final snapshot = await query.get();
       return snapshot.docs.length;
     } catch (e) {
-      print('Bu haftanın randevu sayısı hatası: $e');
       return 0;
     }
   }
@@ -241,10 +239,10 @@ class ReportService {
       }
 
       // En çok tekrar eden işlem türünü bul
-      final mostCommon = typeCounts.entries.reduce((a, b) => a.value > b.value ? a : b);
+      final mostCommon =
+          typeCounts.entries.reduce((a, b) => a.value > b.value ? a : b);
       return {'type': mostCommon.key, 'count': mostCommon.value};
     } catch (e) {
-      print('En çok yapılan işlem türü hatası: $e');
       return {'type': 'Unknown', 'count': 0};
     }
   }
@@ -278,7 +276,8 @@ class ReportService {
       }
 
       // En çok randevu alan müşteri ID'sini bul
-      final mostFrequentCustomerId = customerCounts.entries.reduce((a, b) => a.value > b.value ? a : b);
+      final mostFrequentCustomerId =
+          customerCounts.entries.reduce((a, b) => a.value > b.value ? a : b);
 
       // Müşteri ismini getir
       try {
@@ -289,16 +288,17 @@ class ReportService {
 
         if (customerDoc.exists) {
           final customerData = customerDoc.data() as Map<String, dynamic>;
-          final customerName = '${customerData['name']} ${customerData['surname']}';
+          final customerName =
+              '${customerData['name']} ${customerData['surname']}';
           return {'name': customerName, 'count': mostFrequentCustomerId.value};
         }
-      } catch (e) {
-        print('Müşteri bilgisi getirme hatası: $e');
-      }
+      } catch (e) {}
 
-      return {'name': 'Customer #${mostFrequentCustomerId.key.substring(0, 8)}', 'count': mostFrequentCustomerId.value};
+      return {
+        'name': 'Customer #${mostFrequentCustomerId.key.substring(0, 8)}',
+        'count': mostFrequentCustomerId.value
+      };
     } catch (e) {
-      print('En çok randevu alan müşteri hatası: $e');
       return {'name': 'Unknown', 'count': 0};
     }
   }
@@ -319,22 +319,26 @@ class ReportService {
         // Gelir hesapla
         Query incomeQuery = _firestore
             .collection(_transactionsCollection)
-            .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(monthStart))
+            .where('date',
+                isGreaterThanOrEqualTo: Timestamp.fromDate(monthStart))
             .where('date', isLessThan: Timestamp.fromDate(monthEnd))
             .where('paymentStatus', isEqualTo: PaymentStatus.paid);
 
         if (!userIsOwner) {
-          incomeQuery = incomeQuery.where('addedByUserId', isEqualTo: currentUser!.uid);
+          incomeQuery =
+              incomeQuery.where('addedByUserId', isEqualTo: currentUser!.uid);
         }
 
         // Gider hesapla
         Query expenseQuery = _firestore
             .collection(_expensesCollection)
-            .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(monthStart))
+            .where('date',
+                isGreaterThanOrEqualTo: Timestamp.fromDate(monthStart))
             .where('date', isLessThan: Timestamp.fromDate(monthEnd));
 
         if (!userIsOwner) {
-          expenseQuery = expenseQuery.where('addedByUserId', isEqualTo: currentUser!.uid);
+          expenseQuery =
+              expenseQuery.where('addedByUserId', isEqualTo: currentUser!.uid);
         }
 
         final incomeSnapshot = await incomeQuery.get();
@@ -363,7 +367,6 @@ class ReportService {
 
       return monthlyData;
     } catch (e) {
-      print('Aylık gelir/gider karşılaştırması hatası: $e');
       return [];
     }
   }
@@ -387,11 +390,13 @@ class ReportService {
         final data = doc.data() as Map<String, dynamic>;
         final transactionType = data['transactionType'] ?? 'Unknown';
         final amount = (data['amount'] ?? 0.0).toDouble();
-        typeAmounts[transactionType] = (typeAmounts[transactionType] ?? 0.0) + amount;
+        typeAmounts[transactionType] =
+            (typeAmounts[transactionType] ?? 0.0) + amount;
       }
 
       List<Map<String, dynamic>> distribution = [];
-      double total = typeAmounts.values.fold(0.0, (sum, amount) => sum + amount);
+      double total =
+          typeAmounts.values.fold(0.0, (sum, amount) => sum + amount);
 
       typeAmounts.forEach((type, amount) {
         distribution.add({
@@ -406,7 +411,6 @@ class ReportService {
 
       return distribution;
     } catch (e) {
-      print('İşlem türü dağılımı hatası: $e');
       return [];
     }
   }
@@ -427,7 +431,8 @@ class ReportService {
 
         Query query = _firestore
             .collection(_appointmentsCollection)
-            .where('startDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+            .where('startDate',
+                isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
             .where('startDate', isLessThan: Timestamp.fromDate(endOfDay));
 
         if (!userIsOwner) {
@@ -445,7 +450,6 @@ class ReportService {
 
       return dailyData;
     } catch (e) {
-      print('Günlük randevu sayıları hatası: $e');
       return [];
     }
   }
@@ -488,7 +492,6 @@ class ReportService {
 
       return distribution;
     } catch (e) {
-      print('Not kategori dağılımı hatası: $e');
       return [];
     }
   }
@@ -514,7 +517,8 @@ class ReportService {
         final amount = (data['amount'] ?? 0.0).toDouble();
 
         if (customerId.isNotEmpty) {
-          customerSpending[customerId] = (customerSpending[customerId] ?? 0.0) + amount;
+          customerSpending[customerId] =
+              (customerSpending[customerId] ?? 0.0) + amount;
         }
       }
 
@@ -546,7 +550,6 @@ class ReportService {
             'rank': i + 1,
           });
         } catch (e) {
-          print('Müşteri bilgisi getirme hatası: $e');
           topCustomers.add({
             'name': 'Customer #${customerId.substring(0, 8)}',
             'amount': amount,
@@ -557,7 +560,6 @@ class ReportService {
 
       return topCustomers;
     } catch (e) {
-      print('Top müşteriler hatası: $e');
       return [];
     }
   }
@@ -565,8 +567,19 @@ class ReportService {
   // Yardımcı metodlar
   String _getMonthName(int month) {
     const months = [
-      '', 'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      '',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
     ];
     return months[month];
   }
@@ -599,7 +612,6 @@ class ReportService {
         'mostFrequentCustomer': results[6],
       };
     } catch (e) {
-      print('Genel özet raporu hatası: $e');
       return {};
     }
   }

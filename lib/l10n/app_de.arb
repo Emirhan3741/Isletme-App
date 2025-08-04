@@ -1,0 +1,159 @@
+{
+  "@@locale": "de",
+  "@@context": "Locapo ERP System - German Translations",
+  
+  "appName": "Locapo ERP",
+  "@appName": {
+    "description": "Name der Anwendung"
+  },
+  
+  "welcome": "Willkommen",
+  "@welcome": {
+    "description": "Begrüßungsnachricht"
+  },
+  
+  "login": "Anmelden",
+  "@login": {
+    "description": "Anmelde-Button"
+  },
+  
+  "logout": "Abmelden",
+  "@logout": {
+    "description": "Abmelde-Button"
+  },
+  
+  "email": "E-Mail",
+  "@email": {
+    "description": "E-Mail-Feld"
+  },
+  
+  "password": "Passwort",
+  "@password": {
+    "description": "Passwort-Feld"
+  },
+  
+  "register": "Registrieren",
+  "@register": {
+    "description": "Registrierungs-Button"
+  },
+  
+  "name": "Name",
+  "@name": {
+    "description": "Name-Feld"
+  },
+  
+  "loading": "Lädt...",
+  "@loading": {
+    "description": "Ladennachricht"
+  },
+  
+  "error": "Fehler",
+  "@error": {
+    "description": "Allgemeiner Fehlertitel"
+  },
+  
+  "success": "Erfolgreich",
+  "@success": {
+    "description": "Erfolgsnachricht"
+  },
+  
+  "cancel": "Abbrechen",
+  "@cancel": {
+    "description": "Abbrechen-Button"
+  },
+  
+  "save": "Speichern",
+  "@save": {
+    "description": "Speichern-Button"
+  },
+  
+  "delete": "Löschen",
+  "@delete": {
+    "description": "Löschen-Button"
+  },
+  
+  "edit": "Bearbeiten",
+  "@edit": {
+    "description": "Bearbeiten-Button"
+  },
+  
+  "dashboard": "Dashboard",
+  "@dashboard": {
+    "description": "Dashboard-Seite"
+  },
+  
+  "appointments": "Termine",
+  "@appointments": {
+    "description": "Termine-Seite"
+  },
+  
+  "customers": "Kunden",
+  "@customers": {
+    "description": "Kunden-Seite"
+  },
+  
+  "documents": "Dokumente",
+  "@documents": {
+    "description": "Dokumente-Seite"
+  },
+  
+  "settings": "Einstellungen",
+  "@settings": {
+    "description": "Einstellungen-Seite"
+  },
+  
+  "sector": "Sektor",
+  "@sector": {
+    "description": "Sektor-Auswahl"
+  },
+  
+  "selectSector": "Sektor Auswählen",
+  "@selectSector": {
+    "description": "Sektor auswählen Button"
+  },
+  
+  "pleaseSelectSectorOrContactAdmin": "Bitte wählen Sie Ihren Sektor aus oder kontaktieren Sie den Administrator.",
+  "@pleaseSelectSectorOrContactAdmin": {
+    "description": "Sektor-Auswahl Warnmeldung"
+  },
+  
+  "back": "Zurück",
+  "@back": {
+    "description": "Zurück-Button"
+  },
+  
+  "selectLanguage": "Sprache Auswählen",
+  "@selectLanguage": {
+    "description": "Sprachauswahl-Titel"
+  },
+  
+  "turkish": "Türkisch",
+  "@turkish": {
+    "description": "Türkische Sprachoption"
+  },
+  
+  "english": "Englisch",
+  "@english": {
+    "description": "Englische Sprachoption"
+  },
+  
+  "german": "Deutsch",
+  "@german": {
+    "description": "Deutsche Sprachoption"
+  },
+  
+  "spanish": "Spanisch",
+  "@spanish": {
+    "description": "Spanische Sprachoption"
+  },
+  
+  "french": "Französisch",
+  "@french": {
+    "description": "Französische Sprachoption"
+  },
+  
+  "writeMessage": "Nachricht schreiben...",
+  "@writeMessage": {
+    "description": "AI Chat Nachricht eingeben Platzhalter"
+  }
+}

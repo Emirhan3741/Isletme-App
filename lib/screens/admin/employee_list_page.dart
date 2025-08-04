@@ -1,8 +1,10 @@
-// CodeRabbit analyze fix: Dosya düzenlendi
+// Refactored by Cursor
+
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+
 import '../../models/user_model.dart';
 import '../../services/user_service.dart';
+import '../../utils/employee_invite_generator.dart';
 import 'add_edit_employee_page.dart';
 
 class EmployeeListPage extends StatefulWidget {
@@ -26,13 +28,116 @@ class _EmployeeListPageState extends State<EmployeeListPage> {
   List<UserModel> _filterEmployees(List<UserModel> employees) {
     if (_searchQuery.isEmpty) return employees;
     return employees.where((employee) {
-      return employee.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-             employee.email.toLowerCase().contains(_searchQuery.toLowerCase());
+      return employee.name.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
   }
 
   Future<void> _refreshEmployees() async {
     setState(() {});
+  }
+
+  Future<void> _generateAndShareInviteLink() async {
+    try {
+      // Loading göster
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Davet linki oluştur
+      final inviteLink = await EmployeeInviteGenerator.createEmployeeInvite(
+        businessId:
+            'default_business', // Bu işletme ID'si gerçek veriden gelecek
+        metadata: {
+          'createdBy': 'admin',
+          'createdAt': DateTime.now().toIso8601String(),
+        },
+      );
+
+      // Loading dialog'u kapat
+      if (mounted) Navigator.pop(context);
+
+      // Başarı dialog'u göster
+      if (mounted) {
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('🎉 Davet Linki Oluşturuldu'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Çalışan davet linki başarıyla oluşturuldu!'),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: SelectableText(
+                    inviteLink,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Bu linki çalışana göndererek kayıt olmasını sağlayabilirsiniz.',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Kapat'),
+              ),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  try {
+                    await EmployeeInviteGenerator.shareViaWhatsApp(
+                      inviteLink,
+                      message:
+                          'Merhaba! Çalışan kaydı için özel davet linkiniz hazır:',
+                    );
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('WhatsApp paylaşımı başarısız: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
+                icon: const Icon(Icons.share),
+                label: const Text('WhatsApp ile Paylaş'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      // Loading dialog'u kapat (eğer açık ise)
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+
+      // Hata mesajı göster
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Davet linki oluşturulamadı: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -42,7 +147,13 @@ class _EmployeeListPageState extends State<EmployeeListPage> {
         title: const Text('Çalışanlar'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.link),
+            tooltip: 'Çalışan Davet Linki Oluştur',
+            onPressed: _generateAndShareInviteLink,
+          ),
+          IconButton(
             icon: const Icon(Icons.add),
+            tooltip: 'Çalışan Ekle',
             onPressed: () async {
               final result = await Navigator.push(
                 context,
@@ -90,7 +201,8 @@ class _EmployeeListPageState extends State<EmployeeListPage> {
                 }
                 final employees = _filterEmployees(snapshot.data!);
                 if (employees.isEmpty) {
-                  return const Center(child: Text('Aramanıza uygun çalışan bulunamadı.'));
+                  return const Center(
+                      child: Text('Aramanıza uygun çalışan bulunamadı.'));
                 }
                 return ListView.separated(
                   itemCount: employees.length,
@@ -100,13 +212,12 @@ class _EmployeeListPageState extends State<EmployeeListPage> {
                     return ListTile(
                       leading: const CircleAvatar(child: Icon(Icons.person)),
                       title: Text(employee.name),
-                      subtitle: Text(employee.email),
-                      trailing: Text(DateFormat('dd.MM.yyyy').format(employee.createdAt)),
                       onTap: () async {
                         final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => AddEditEmployeePage(employee: employee),
+                            builder: (_) =>
+                                AddEditEmployeePage(employee: employee),
                           ),
                         );
                         if (result == true) _refreshEmployees();

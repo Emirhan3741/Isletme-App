@@ -1,0 +1,113 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Yardımcı fonksiyonlar
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidFileSize() {
+      // Max 50MB file size
+      return resource.size < 50 * 1024 * 1024;
+    }
+    
+    function isValidImageSize() {
+      // Max 10MB image size
+      return resource.size < 10 * 1024 * 1024;
+    }
+    
+    function isImageFile() {
+      return resource.contentType.matches('image/.*');
+    }
+    
+    function isPdfFile() {
+      return resource.contentType == 'application/pdf';
+    }
+    
+    function isDocumentFile() {
+      return resource.contentType.matches('application/.*') || 
+             resource.contentType.matches('text/.*');
+    }
+    
+    // Kullanıcı profil resimleri - sadece kendi resimlerini yönetebilir
+    match /profile_images/{userId}/{fileName} {
+      allow read: if true; // Public read for profile images
+      allow write, delete: if isOwner(userId) && isImageFile() && isValidImageSize();
+    }
+    
+    // Kullanıcı belgeleri - sadece kendi belgelerini yönetebilir
+    match /user_documents/{userId}/{fileName} {
+      allow read, write, delete: if isOwner(userId) && 
+                                     (isDocumentFile() || isPdfFile()) && 
+                                     isValidFileSize();
+    }
+    
+    // Müşteri belgeleri - userId klasörü altında
+    match /client_documents/{userId}/{fileName} {
+      allow read, write, delete: if isOwner(userId) && 
+                                     (isDocumentFile() || isPdfFile() || isImageFile()) && 
+                                     isValidFileSize();
+    }
+    
+    // Randevu ekleri
+    match /appointment_attachments/{userId}/{fileName} {
+      allow read, write, delete: if isOwner(userId) && 
+                                     (isDocumentFile() || isPdfFile() || isImageFile()) && 
+                                     isValidFileSize();
+    }
+    
+    // Hizmet resimleri
+    match /service_images/{userId}/{fileName} {
+      allow read: if true; // Public read for service images
+      allow write, delete: if isOwner(userId) && isImageFile() && isValidImageSize();
+    }
+    
+    // Personel resimleri
+    match /staff_images/{userId}/{fileName} {
+      allow read: if true; // Public read for staff images
+      allow write, delete: if isOwner(userId) && isImageFile() && isValidImageSize();
+    }
+    
+    // İş yeri resimleri
+    match /business_images/{userId}/{fileName} {
+      allow read: if true; // Public read for business images
+      allow write, delete: if isOwner(userId) && isImageFile() && isValidImageSize();
+    }
+    
+    // Raporlar - sadece kullanıcının kendisi erişebilir
+    match /reports/{userId}/{fileName} {
+      allow read, write, delete: if isOwner(userId) && 
+                                     (isPdfFile() || resource.contentType.matches('application/vnd.ms-excel.*') ||
+                                      resource.contentType.matches('application/vnd.openxmlformats-officedocument.spreadsheetml.*')) &&
+                                     isValidFileSize();
+    }
+    
+    // Yedek dosyalar - sadece kullanıcının kendisi erişebilir
+    match /backups/{userId}/{fileName} {
+      allow read, write, delete: if isOwner(userId) && isValidFileSize();
+    }
+    
+    // Geçici dosyalar - 24 saat sonra otomatik silinir
+    match /temp/{userId}/{fileName} {
+      allow read, write, delete: if isOwner(userId) && 
+                                     isValidFileSize() && 
+                                     request.time < resource.timeCreated + duration.value(1, 'd');
+    }
+    
+    // Cache dosyaları - herkes okuyabilir, sadece sahibi yazabilir
+    match /cache/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write, delete: if isOwner(userId) && isValidFileSize();
+    }
+    
+    // Varsayılan kural - erişim reddedilir
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,46 @@
+=====================================================
+               KRİTİK HATALAR - ACİL DÜZELTME
+=====================================================
+
+BU HATALAR UYGULAMANIN COMPILE EDİLMESİNİ ENGELLİYOR!
+
+1. PSYCHOLOGY DASHBOARD - HATA 1:
+   Dosya: lib\screens\psychology\psychology_dashboard_page.dart
+   Satır: 2453:27
+   Hata: The argument type 'int?' can't be assigned to the parameter type 'num'
+   
+   Mevcut kod:
+   totalDuration += (data['duration'] as int?);
+   
+   Çözüm:
+   totalDuration += (data['duration'] as int?) ?? 0;
+
+2. PSYCHOLOGY DASHBOARD - HATA 2:
+   Dosya: lib\screens\psychology\psychology_dashboard_page.dart
+   Satır: 2484:18
+   Hata: The argument type 'double?' can't be assigned to the parameter type 'num'
+   
+   Mevcut kod:
+   total += (data['amount'] as num?)?.toDouble();
+   
+   Çözüm:
+   total += (data['amount'] as num?)?.toDouble() ?? 0.0;
+
+3. PSYCHOLOGY CLIENT MODEL - BAŞLATILMAMIŞ ALANLAR:
+   Dosya: lib\core\models\psychology_client_model.dart
+   Hata: Final field 'ad' is not initialized (ve 36 tane daha)
+   
+   Çözüm: Constructor ekle veya required parametreler tanımla
+
+4. AUTH PROVIDER - NULL SAFETY:
+   Dosya: lib\providers\auth_provider.dart
+   Satır: 157:36, 158:37, 484:29
+   Hata: String? can't be assigned to String
+   
+   Çözüm:
+   name: credential.user!.displayName ?? '',
+   email: credential.user!.email ?? '',
+
+=====================================================
+Bu hataları düzeltmeden web/apk build başarısız olacaktır!
+=====================================================

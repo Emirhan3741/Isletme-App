@@ -1,14 +1,16 @@
-import 'package:flutter/foundation.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
 import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart';
+
+import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
   static DatabaseService get instance => _instance;
-  
+
   Database? _database;
-  
+
   DatabaseService._internal();
 
   Future<Database> get database async {
@@ -18,8 +20,8 @@ class DatabaseService {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'randevu_erp.db');
-    
+    String path = join(await getDatabasesPath(), 'locapo.db');
+
     return await openDatabase(
       path,
       version: 1,
@@ -28,7 +30,8 @@ class DatabaseService {
   }
 
   Future<void> initializeDatabase() async {
-    if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    if (!kIsWeb &&
+        (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS))) {
       await database;
     }
   }
@@ -177,4 +180,4 @@ class DatabaseService {
       _database = null;
     }
   }
-} 
+}

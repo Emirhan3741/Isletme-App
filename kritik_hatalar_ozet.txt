@@ -1,0 +1,42 @@
+LOCAPO PROJESİ - KRİTİK HATALAR ÖZETİ
+====================================
+
+ACİL DÜZELTİLMESİ GEREKEN 9 KRİTİK HATA:
+
+1. APPlocalizations IMPORT HATALARI (6 dosya):
+==============================================
+lib\screens\transactions\add_edit_transaction_page.dart:4:8
+lib\utils\l10n_helper.dart:2:8
+lib\widgets\language_selector_widget.dart:4:8
+
+ÇÖZÜM: Bu dosyalarda import yolunu değiştir:
+YANLIŞ: import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+DOĞRU:  import '../../l10n/app_localizations.dart';
+
+2. APPLOCALIZATONS TANIMLANMAMIŞ HATALAR:
+=======================================
+lib\screens\transactions\add_edit_transaction_page.dart:244:27
+lib\utils\l10n_helper.dart:8:10, 9:27, 17:10, 18:12  
+lib\widgets\language_selector_widget.dart:48:15, 125:27, 137:5, 184:5
+
+ÇÖZÜM: Import düzeltildikten sonra otomatik çözülecek.
+
+3. TIMESTAMP CAST HATASI:
+========================
+lib\widgets\file_upload_widgets.dart:544:60
+
+HATA: 'Timestamp' bir tip değil, 'as' ifadesinde kullanılamaz
+ÇÖZÜM: import 'package:cloud_firestore/cloud_firestore.dart'; ekle
+       ve Timestamp'ı doğru şekilde kullan.
+
+HEMEN YAPILMASI GEREKENLER:
+==========================
+
+1. İlk olarak 3 dosyadaki import yollarını düzelt
+2. Timestamp import'unu ekle
+3. flutter clean && flutter pub get çalıştır
+4. flutter run -d web ile test et
+
+Bu 3 adımı tamamladıktan sonra proje çalışır hale gelecektir.
+
+DURUM: Proje şu anda derlenmiyor - Bu hatalar düzeltilince çalışacak! 

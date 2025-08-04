@@ -22,4 +22,4 @@ extension LogLevelExtension on LogLevel {
     }
   }
 }
-// Cleaned and fixed for web build 
+// Cleaned and fixed for web build

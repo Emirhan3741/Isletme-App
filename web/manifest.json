@@ -1,10 +1,11 @@
 {
-    "name": "randevu_erp",
-    "short_name": "randevu_erp",
+    "name": "Locapo",
+    "short_name": "Locapo",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
+    "gcm_sender_id": "308323114774",
     "description": "A new Flutter project.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,

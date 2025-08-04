@@ -1,0 +1,159 @@
+{
+  "@@locale": "en",
+  "@@context": "Locapo ERP System - English Translations",
+  
+  "appName": "Locapo ERP",
+  "@appName": {
+    "description": "Application name"
+  },
+  
+  "welcome": "Welcome",
+  "@welcome": {
+    "description": "Welcome message"
+  },
+  
+  "login": "Login",
+  "@login": {
+    "description": "Login button"
+  },
+  
+  "logout": "Logout",
+  "@logout": {
+    "description": "Logout button"
+  },
+  
+  "email": "Email",
+  "@email": {
+    "description": "Email field"
+  },
+  
+  "password": "Password",
+  "@password": {
+    "description": "Password field"
+  },
+  
+  "register": "Register",
+  "@register": {
+    "description": "Register button"
+  },
+  
+  "name": "Name",
+  "@name": {
+    "description": "Name field"
+  },
+  
+  "loading": "Loading...",
+  "@loading": {
+    "description": "Loading message"
+  },
+  
+  "error": "Error",
+  "@error": {
+    "description": "General error title"
+  },
+  
+  "success": "Success",
+  "@success": {
+    "description": "Success message"
+  },
+  
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button"
+  },
+  
+  "save": "Save",
+  "@save": {
+    "description": "Save button"
+  },
+  
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete button"
+  },
+  
+  "edit": "Edit",
+  "@edit": {
+    "description": "Edit button"
+  },
+  
+  "dashboard": "Dashboard",
+  "@dashboard": {
+    "description": "Dashboard page"
+  },
+  
+  "appointments": "Appointments",
+  "@appointments": {
+    "description": "Appointments page"
+  },
+  
+  "customers": "Customers",
+  "@customers": {
+    "description": "Customers page"
+  },
+  
+  "documents": "Documents",
+  "@documents": {
+    "description": "Documents page"
+  },
+  
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings page"
+  },
+  
+  "sector": "Sector",
+  "@sector": {
+    "description": "Sector selection"
+  },
+  
+  "selectSector": "Select Sector",
+  "@selectSector": {
+    "description": "Select sector button"
+  },
+  
+  "pleaseSelectSectorOrContactAdmin": "Please select your sector or contact the administrator.",
+  "@pleaseSelectSectorOrContactAdmin": {
+    "description": "Sector selection warning message"
+  },
+  
+  "back": "Back",
+  "@back": {
+    "description": "Back button"
+  },
+  
+  "selectLanguage": "Select Language",
+  "@selectLanguage": {
+    "description": "Language selection title"
+  },
+  
+  "turkish": "Turkish",
+  "@turkish": {
+    "description": "Turkish language option"
+  },
+  
+  "english": "English",
+  "@english": {
+    "description": "English language option"
+  },
+  
+  "german": "German",
+  "@german": {
+    "description": "German language option"
+  },
+  
+  "spanish": "Spanish",
+  "@spanish": {
+    "description": "Spanish language option"
+  },
+  
+  "french": "French",
+  "@french": {
+    "description": "French language option"
+  },
+  
+  "writeMessage": "Write a message...",
+  "@writeMessage": {
+    "description": "AI chat message input placeholder"
+  }
+}
